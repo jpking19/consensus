@@ -129,22 +129,27 @@ const Belief: React.FC<BeliefProps> = ({
   }, [editValue, editing]);
 
   return (
-    <div className="d-flex align-items-stretch" style={{ gap: 8 }}>
-      {/* Left acceptance card */}
+    <div
+      id="belief-card"
+      className="position-relative d-flex align-items-stretch"
+      style={{ gap: 0, minHeight }}
+    >
+      {/* Left acceptance card (background, extends left) */}
       <div
-        className={`card mb-3 d-flex flex-column justify-content-center align-items-center p-0 bg-${
+        id="left-acceptance-card"
+        className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-end bg-${
           (onAcceptanceLeftChange ? acceptanceLeft : localAcceptanceLeft)
             ? "success"
             : "danger"
         } border border-light`}
         style={{
-          width: 48,
-          minWidth: 48,
-          maxWidth: 48,
-          cursor: "pointer",
-          borderRadius: 8,
-          transition: "background 0.2s",
-          height: "100%",
+          width: 120,
+          height: minHeight,
+          zIndex: 0,
+          borderTopLeftRadius: 8,
+          borderBottomLeftRadius: 8,
+          transition: "background 0.2s, left 0.2s",
+          left: editing ? 32 : -24,
         }}
         onClick={handleLeftClick}
         title={
@@ -153,9 +158,10 @@ const Belief: React.FC<BeliefProps> = ({
             : "Not accepted by Left (click to toggle)"
         }
       ></div>
-      {/* Main belief card */}
+      {/* Main belief card (foreground) */}
       <div
-        className="card bg-dark border border-light mb-3 flex-grow-1"
+        id="belief-content"
+        className="card bg-dark border border-light mb-3 flex-grow-1 position-relative mx-auto"
         style={{
           cursor: onTextChange ? "pointer" : undefined,
           borderRadius: 8,
@@ -163,7 +169,8 @@ const Belief: React.FC<BeliefProps> = ({
           maxWidth,
           width: cardWidth,
           minHeight,
-          transition: "width ease 0.2s, min-width 0.2s, max-width 0.2s",
+          zIndex: 1,
+          boxShadow: "0 0 16px rgba(0,0,0,0.2)",
         }}
         onClick={handleCardClick}
       >
@@ -224,21 +231,21 @@ const Belief: React.FC<BeliefProps> = ({
           )} */}
         </div>
       </div>
-      {/* Right acceptance card */}
       <div
-        className={`card mb-3 d-flex flex-column justify-content-center align-items-center p-0 bg-${
+        id="right-acceptance-card"
+        className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-start bg-${
           (onAcceptanceRightChange ? acceptanceRight : localAcceptanceRight)
             ? "success"
             : "danger"
         } border border-light`}
         style={{
-          width: 48,
-          minWidth: 48,
-          maxWidth: 48,
-          cursor: "pointer",
-          borderRadius: 8,
-          transition: "background 0.2s",
-          height: "100%",
+          width: 120,
+          height: minHeight,
+          zIndex: 0,
+          borderTopRightRadius: 8,
+          borderBottomRightRadius: 8,
+          transition: "background 0.2s, right 0.2s",
+          right: editing ? 32 : -24,
         }}
         onClick={handleRightClick}
         title={
