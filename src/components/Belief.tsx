@@ -93,7 +93,7 @@ const Belief: React.FC<BeliefProps> = ({
 
   // Card sizing options
   const minWidth = 200;
-  const maxWidth = 600;
+  const maxWidth = 400;
   const minHeight = 64;
 
   // Calculate width based on text length and max lines
@@ -103,10 +103,11 @@ const Belief: React.FC<BeliefProps> = ({
     span.style.visibility = "hidden";
     span.style.position = "fixed";
     span.style.whiteSpace = "pre";
-    span.style.font = "1rem system-ui, sans-serif";
+    span.style.font = "1rem Helvetica Neue, sans-serif";
     span.textContent = text;
     document.body.appendChild(span);
-    const width = span.offsetWidth;
+    const width = span.offsetWidth + 16; // Add padding for input
+    console.log(width);
     document.body.removeChild(span);
     return width;
   };
@@ -115,21 +116,16 @@ const Belief: React.FC<BeliefProps> = ({
   const [inputRows, setInputRows] = useState(1);
 
   React.useEffect(() => {
-    if (editing) {
-      // Estimate width for the input
-      const width = Math.min(
-        Math.max(getTextWidth(editValue) + 32, minWidth),
-        maxWidth
-      );
-      setCardWidth(width);
-      // Calculate number of rows needed
-      const approxCharsPerLine = 50; // adjust as needed
-      const lines = Math.ceil(editValue.length / approxCharsPerLine);
-      setInputRows(lines);
-    } else {
-      setCardWidth(minWidth);
-      setInputRows(1);
-    }
+    // Calculate width based on text length
+    const width = Math.min(
+      Math.max(getTextWidth(editValue) + 32, minWidth),
+      maxWidth
+    );
+    setCardWidth(width);
+    // Calculate number of rows needed
+    const approxCharsPerLine = 50; // adjust as needed
+    const lines = Math.ceil(editValue.length / approxCharsPerLine);
+    setInputRows(lines);
   }, [editValue, editing]);
 
   return (
@@ -165,9 +161,9 @@ const Belief: React.FC<BeliefProps> = ({
           borderRadius: 8,
           minWidth,
           maxWidth,
-          width: editing ? cardWidth : undefined,
+          width: cardWidth,
           minHeight,
-          transition: "width 0.2s, min-width 0.2s, max-width 0.2s",
+          transition: "width ease 0.2s, min-width 0.2s, max-width 0.2s",
         }}
         onClick={handleCardClick}
       >
@@ -190,6 +186,7 @@ const Belief: React.FC<BeliefProps> = ({
                 style={{
                   width: "100%",
                   minWidth: 0,
+                  maxWidth: "100%",
                   boxShadow: "none",
                   resize: "none",
                   overflow: "hidden",
