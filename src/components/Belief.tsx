@@ -89,6 +89,9 @@ const Belief: React.FC<BeliefProps> = ({
   // Update editValue if text prop changes externally
   React.useEffect(() => {
     setEditValue(text);
+    // Reset acceptance states if text changes
+    setLocalAcceptanceLeft(false);
+    setLocalAcceptanceRight(false);
   }, [text]);
 
   // Card sizing options
