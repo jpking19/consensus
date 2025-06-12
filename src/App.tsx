@@ -2,8 +2,11 @@ import Belief from "./components/Belief";
 import React, { useState } from "react";
 
 function App() {
+  const [editingBelief, setEditingBelief] = useState<number | null>(null);
+  const [wasEditingBelief, setWasEditingBelief] = useState(false);
   const [beliefs, setBeliefs] = useState([
     {
+      id: 0,
       text: "The Earth orbits the Sun.",
       description: "This is a foundational scientific fact.",
       acceptanceLeft: false,
@@ -19,10 +22,21 @@ function App() {
     );
   };
 
+  const handleEditingBeliefChange = (id: number | null) => {
+    console.log("Editing belief changed to:", id);
+    // If we were editing a belief, we need to reset the state
+    if (id === null) {
+      setWasEditingBelief(true);
+    }
+
+    setEditingBelief(id);
+  };
+
   const handleAddBeliefAt = (x: number, y: number) => {
     setBeliefs((prev) => [
       ...prev,
       {
+        id: prev.length,
         text: "New Belief",
         description: "",
         acceptanceLeft: false,
@@ -34,16 +48,18 @@ function App() {
   };
 
   const handleBgClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    console.log("Background clicked", e);
-    console.log("Target:", e.target);
-    console.log("Current Target:", e.currentTarget);
     if (e.target == e.currentTarget) {
-      // Prevent adding belief if clicking on an existing belief
-      // Get click position relative to the container
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      handleAddBeliefAt(x, y);
+      // Reset editing state if we were editing a belief
+      if (editingBelief !== null) {
+        setEditingBelief(null);
+      } else {
+        // Prevent adding belief if clicking on an existing belief
+        // Get click position relative to the container
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        handleAddBeliefAt(x, y);
+      }
     }
   };
 
@@ -65,8 +81,10 @@ function App() {
               style={{ zIndex: 2 }}
             >
               <Belief
+                id={belief.id}
                 text={belief.text}
                 onTextChange={(t) => handleTextChange(idx, t)}
+                sendEditingBelief={handleEditingBeliefChange}
                 description={belief.description}
                 acceptanceLeft={belief.acceptanceLeft}
                 acceptanceRight={belief.acceptanceRight}
@@ -83,8 +101,10 @@ function App() {
               }}
             >
               <Belief
+                id={belief.id}
                 text={belief.text}
                 onTextChange={(t) => handleTextChange(idx, t)}
+                sendEditingBelief={handleEditingBeliefChange}
                 description={belief.description}
                 acceptanceLeft={belief.acceptanceLeft}
                 acceptanceRight={belief.acceptanceRight}

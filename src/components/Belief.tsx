@@ -10,24 +10,28 @@ import React, { useState } from "react";
 */
 
 interface BeliefProps {
+  id: number;
   text: string;
   description: string;
   acceptanceLeft: boolean;
   acceptanceRight: boolean;
   supports?: BeliefProps[];
   opposes?: BeliefProps[];
+  sendEditingBelief: (id: number | null) => void;
   onTextChange?: (newText: string) => void;
   onAcceptanceLeftChange?: (val: boolean) => void;
   onAcceptanceRightChange?: (val: boolean) => void;
 }
 
 const Belief: React.FC<BeliefProps> = ({
+  id,
   text,
   description,
   acceptanceLeft,
   acceptanceRight,
   supports = [],
   opposes = [],
+  sendEditingBelief,
   onTextChange,
   onAcceptanceLeftChange,
   onAcceptanceRightChange,
@@ -119,6 +123,12 @@ const Belief: React.FC<BeliefProps> = ({
   const [inputRows, setInputRows] = useState(1);
 
   React.useEffect(() => {
+    console.log("Updating card width and input rows");
+    // Set this belief as the currently edited belief
+    if (editing) {
+      sendEditingBelief(id);
+    }
+
     // Calculate width based on text length
     const width = Math.min(
       Math.max(getTextWidth(editValue) + 32, minWidth),
