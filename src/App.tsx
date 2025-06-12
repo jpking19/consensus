@@ -16,6 +16,12 @@ function App() {
     },
   ]);
 
+  // Track which belief is being dragged and the offset
+  const [draggedBelief, setDraggedBelief] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
+    null
+  );
+
   const handleTextChange = (idx: number, newText: string) => {
     setBeliefs((prev) =>
       prev.map((b, i) => (i === idx ? { ...b, text: newText } : b))
@@ -63,6 +69,40 @@ function App() {
     }
   };
 
+  // Mouse event handlers for drag
+  const handleMouseDown = (idx: number, e: React.MouseEvent) => {
+    // Only allow drag from the main card (not acceptance cards)
+    e.stopPropagation();
+    setDraggedBelief(idx);
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    document.body.style.userSelect = "none";
+  };
+
+  React.useEffect(() => {
+    if (draggedBelief === null) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      setBeliefs((prev) =>
+        prev.map((b, i) =>
+          i === draggedBelief && dragOffset
+            ? { ...b, x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y }
+            : b
+        )
+      );
+    };
+    const handleMouseUp = () => {
+      setDraggedBelief(null);
+      setDragOffset(null);
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [draggedBelief, dragOffset]);
+
   return (
     <div
       className="App p-4 bg-secondary min-vh-100 position-relative"
@@ -78,17 +118,22 @@ function App() {
             <div
               className="w-100 d-flex justify-content-center"
               key={idx}
-              style={{ zIndex: 2 }}
+              style={{ zIndex: 1 }}
             >
-              <Belief
-                id={belief.id}
-                text={belief.text}
-                onTextChange={(t) => handleTextChange(idx, t)}
-                sendEditingBelief={handleEditingBeliefChange}
-                description={belief.description}
-                acceptanceLeft={belief.acceptanceLeft}
-                acceptanceRight={belief.acceptanceRight}
-              />
+              <div
+                style={{ cursor: "grab", display: "inline-block" }}
+                onMouseDown={(e) => handleMouseDown(idx, e)}
+              >
+                <Belief
+                  id={belief.id}
+                  text={belief.text}
+                  onTextChange={(t) => handleTextChange(idx, t)}
+                  sendEditingBelief={handleEditingBeliefChange}
+                  description={belief.description}
+                  acceptanceLeft={belief.acceptanceLeft}
+                  acceptanceRight={belief.acceptanceRight}
+                />
+              </div>
             </div>
           ) : (
             <div
@@ -97,8 +142,11 @@ function App() {
               style={{
                 left: belief.x,
                 top: belief.y,
-                zIndex: 2,
+                zIndex: 3,
+                cursor: "grab",
+                display: "inline-block",
               }}
+              onMouseDown={(e) => handleMouseDown(idx, e)}
             >
               <Belief
                 id={belief.id}
