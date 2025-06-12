@@ -34,6 +34,7 @@ const Belief: React.FC<BeliefProps> = ({
 }) => {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(text);
+  const [zIndex, setZIndex] = useState(3); // Z index should be lowered to base state when connected to another belief
   const [showDescription, setShowDescription] = useState(false);
 
   // Local state for acceptance if handlers are not provided
@@ -110,7 +111,6 @@ const Belief: React.FC<BeliefProps> = ({
     span.textContent = text;
     document.body.appendChild(span);
     const width = span.offsetWidth + 16; // Add padding for input
-    console.log(width);
     document.body.removeChild(span);
     return width;
   };
@@ -148,7 +148,7 @@ const Belief: React.FC<BeliefProps> = ({
         style={{
           width: 120,
           height: minHeight,
-          zIndex: 0,
+          zIndex: zIndex - 1,
           borderTopLeftRadius: 8,
           borderBottomLeftRadius: 8,
           transition: "background 0.2s, left 0.2s",
@@ -172,7 +172,7 @@ const Belief: React.FC<BeliefProps> = ({
           maxWidth,
           width: cardWidth,
           minHeight,
-          zIndex: 1,
+          zIndex: zIndex,
           boxShadow: "0 0 16px rgba(0,0,0,0.2)",
         }}
         onClick={handleCardClick}
@@ -234,6 +234,7 @@ const Belief: React.FC<BeliefProps> = ({
           )} */}
         </div>
       </div>
+      {/* Right acceptance card (background, extends right) */}
       <div
         id="right-acceptance-card"
         className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-start bg-${
@@ -244,7 +245,7 @@ const Belief: React.FC<BeliefProps> = ({
         style={{
           width: 120,
           height: minHeight,
-          zIndex: 0,
+          zIndex: zIndex - 1,
           borderTopRightRadius: 8,
           borderBottomRightRadius: 8,
           transition: "background 0.2s, right 0.2s",
