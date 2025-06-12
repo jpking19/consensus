@@ -18,7 +18,7 @@ interface BeliefProps {
   supports?: BeliefProps[];
   opposes?: BeliefProps[];
   sendEditingBelief: (id: number | null) => void;
-  onTextChange?: (newText: string) => void;
+  onTextChange: (newText: string) => void;
   onAcceptanceLeftChange?: (val: boolean) => void;
   onAcceptanceRightChange?: (val: boolean) => void;
 }
@@ -38,7 +38,7 @@ const Belief: React.FC<BeliefProps> = ({
 }) => {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(text);
-  const [zIndex, setZIndex] = useState(3); // Z index should be lowered to base state when connected to another belief
+  const [zIndex, setZIndex] = useState(3); // TODO: Z index should be lowered to base state when connected to another belief
   const [showDescription, setShowDescription] = useState(false);
 
   // Local state for acceptance if handlers are not provided
@@ -54,10 +54,6 @@ const Belief: React.FC<BeliefProps> = ({
   React.useEffect(() => {
     setLocalAcceptanceRight(acceptanceRight);
   }, [acceptanceRight]);
-
-  const handleCardClick = () => {
-    if (onTextChange) setEditing(true);
-  };
 
   const handleInputBlur = () => {
     setEditing(false);
@@ -141,6 +137,29 @@ const Belief: React.FC<BeliefProps> = ({
     setInputRows(lines);
   }, [editValue, editing]);
 
+  // Track mouse position for click vs drag detection
+  const [mouseDownPos, setMouseDownPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // Only allow edit if mouse up is close to mouse down (not a drag)
+  const handleCardMouseDown = (e: React.MouseEvent) => {
+    setMouseDownPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleCardMouseUp = (e: React.MouseEvent) => {
+    if (mouseDownPos) {
+      const dx = e.clientX - mouseDownPos.x;
+      const dy = e.clientY - mouseDownPos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 5) {
+        setEditing(true);
+      }
+    }
+    setMouseDownPos(null);
+  };
+
   return (
     <div
       id="belief-card"
@@ -185,7 +204,8 @@ const Belief: React.FC<BeliefProps> = ({
           zIndex: zIndex,
           boxShadow: "0 0 16px rgba(0,0,0,0.2)",
         }}
-        onClick={handleCardClick}
+        onMouseDown={handleCardMouseDown}
+        onMouseUp={handleCardMouseUp}
       >
         <div className="card-header text-light d-flex justify-content-between align-items-center">
           <div

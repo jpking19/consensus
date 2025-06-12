@@ -13,6 +13,7 @@ function App() {
       acceptanceRight: false,
       x: 0,
       y: 0,
+      locked: true, // Lock the first belief by default
     },
   ]);
 
@@ -21,6 +22,13 @@ function App() {
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null
   );
+  // Track if a drag was attempted on a locked belief
+  const [dragAttemptedOnLocked, setDragAttemptedOnLocked] = useState(false);
+  // Track mouse position for click vs drag detection
+  const [mouseDownPos, setMouseDownPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const handleTextChange = (idx: number, newText: string) => {
     setBeliefs((prev) =>
@@ -49,12 +57,18 @@ function App() {
         acceptanceRight: false,
         x,
         y,
+        locked: false,
       },
     ]);
   };
 
   const handleBgClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target == e.currentTarget) {
+      // Prevent adding a belief if last drag was on a locked belief
+      if (dragAttemptedOnLocked) {
+        setDragAttemptedOnLocked(false);
+        return;
+      }
       // Reset editing state if we were editing a belief
       if (editingBelief !== null) {
         setEditingBelief(null);
@@ -69,14 +83,33 @@ function App() {
     }
   };
 
-  // Mouse event handlers for drag
+  // Mouse event handlers for drag and edit distinction
   const handleMouseDown = (idx: number, e: React.MouseEvent) => {
-    // Only allow drag from the main card (not acceptance cards)
     e.stopPropagation();
+    setMouseDownPos({ x: e.clientX, y: e.clientY });
+    // Check if the belief is locked
+    if (beliefs[idx].locked) {
+      setDragAttemptedOnLocked(true);
+      return;
+    }
     setDraggedBelief(idx);
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     document.body.style.userSelect = "none";
+  };
+
+  // Only allow edit if mouse up is close to mouse down (not a drag)
+  const handleMouseUpOnBelief = (idx: number, e: React.MouseEvent) => {
+    if (mouseDownPos) {
+      const dx = e.clientX - mouseDownPos.x;
+      const dy = e.clientY - mouseDownPos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 5) {
+        // Considered a click, allow edit
+        handleEditingBeliefChange(beliefs[idx].id);
+      }
+    }
+    setMouseDownPos(null);
   };
 
   React.useEffect(() => {
@@ -123,6 +156,7 @@ function App() {
               <div
                 style={{ cursor: "grab", display: "inline-block" }}
                 onMouseDown={(e) => handleMouseDown(idx, e)}
+                onMouseUp={(e) => handleMouseUpOnBelief(idx, e)}
               >
                 <Belief
                   id={belief.id}
@@ -147,6 +181,7 @@ function App() {
                 display: "inline-block",
               }}
               onMouseDown={(e) => handleMouseDown(idx, e)}
+              onMouseUp={(e) => handleMouseUpOnBelief(idx, e)}
             >
               <Belief
                 id={belief.id}
