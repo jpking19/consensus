@@ -1,14 +1,5 @@
 import React, { useState } from "react";
 
-/* A belife will contain
-- A title (one sentence)
-    - this title can contain definitions
-- A description (necessary facts)
-- A bool acceptance for both left and right
-- a tree of children Beliefs that support
-- a tree of children Beliefs that oppose
-*/
-
 interface BeliefProps {
   id: number;
   text: string;
@@ -17,29 +8,21 @@ interface BeliefProps {
   acceptanceRight: boolean;
   supports?: BeliefProps[];
   opposes?: BeliefProps[];
-  sendEditingBelief: (id: number | null) => void;
-  onTextChange: (newText: string) => void;
-  onAcceptanceLeftChange?: (val: boolean) => void;
-  onAcceptanceRightChange?: (val: boolean) => void;
+  handleEditingBeliefChange: (id: number | null) => void;
 }
 
 const Belief: React.FC<BeliefProps> = ({
   id,
   text,
-  description,
   acceptanceLeft,
   acceptanceRight,
   supports = [],
   opposes = [],
-  sendEditingBelief,
-  onTextChange,
-  onAcceptanceLeftChange,
-  onAcceptanceRightChange,
+  handleEditingBeliefChange,
 }) => {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(text);
   const [zIndex, setZIndex] = useState(3); // TODO: Z index should be lowered to base state when connected to another belief
-  const [showDescription, setShowDescription] = useState(false);
 
   // Local state for acceptance if handlers are not provided
   const [localAcceptanceLeft, setLocalAcceptanceLeft] =
@@ -47,58 +30,26 @@ const Belief: React.FC<BeliefProps> = ({
   const [localAcceptanceRight, setLocalAcceptanceRight] =
     useState(acceptanceRight);
 
-  // Keep local state in sync with props
-  React.useEffect(() => {
-    setLocalAcceptanceLeft(acceptanceLeft);
-  }, [acceptanceLeft]);
-  React.useEffect(() => {
-    setLocalAcceptanceRight(acceptanceRight);
-  }, [acceptanceRight]);
-
-  const handleInputBlur = () => {
-    setEditing(false);
-    if (onTextChange && editValue !== text) onTextChange(editValue);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditValue(e.target.value);
-  };
-
-  const handleToggleDescription = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowDescription((prev) => !prev);
-  };
-
   const handleLeftClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onAcceptanceLeftChange) {
-      onAcceptanceLeftChange(!acceptanceLeft);
-    } else {
-      setLocalAcceptanceLeft((prev) => !prev);
-    }
+    setLocalAcceptanceLeft((prev) => !prev);
   };
 
   const handleRightClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onAcceptanceRightChange) {
-      onAcceptanceRightChange(!acceptanceRight);
-    } else {
-      setLocalAcceptanceRight((prev) => !prev);
-    }
+    setLocalAcceptanceRight((prev) => !prev);
   };
 
-  // Update editValue if text prop changes externally
-  React.useEffect(() => {
-    setEditValue(text);
-    // Reset acceptance states if text changes
-    setLocalAcceptanceLeft(false);
-    setLocalAcceptanceRight(false);
-  }, [text]);
-
-  // Card sizing options
+  /*
+   * #########################################################
+   * Text Edit Detection
+   * #########################################################
+   */
   const minWidth = 200;
   const maxWidth = 400;
   const minHeight = 64;
+  const [cardWidth, setCardWidth] = useState(minWidth);
+  const [inputRows, setInputRows] = useState(1);
 
   // Calculate width based on text length and max lines
   const getTextWidth = (text: string) => {
@@ -115,14 +66,23 @@ const Belief: React.FC<BeliefProps> = ({
     return width;
   };
 
-  const [cardWidth, setCardWidth] = useState(minWidth);
-  const [inputRows, setInputRows] = useState(1);
+  const handleInputBlur = () => {
+    setEditing(false);
+  };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditValue(e.target.value);
+
+    // Reset acceptance states when editing text
+    setLocalAcceptanceLeft(false);
+    setLocalAcceptanceRight(false);
+  };
+
+  // Update card width and input rows when editing state changes
   React.useEffect(() => {
-    console.log("Updating card width and input rows");
     // Set this belief as the currently edited belief
     if (editing) {
-      sendEditingBelief(id);
+      handleEditingBeliefChange(id);
     }
 
     // Calculate width based on text length
@@ -131,11 +91,18 @@ const Belief: React.FC<BeliefProps> = ({
       maxWidth
     );
     setCardWidth(width);
+
     // Calculate number of rows needed
     const approxCharsPerLine = 50; // adjust as needed
     const lines = Math.ceil(editValue.length / approxCharsPerLine);
     setInputRows(lines);
   }, [editValue, editing]);
+
+  /*
+   * #########################################################
+   * Drag and Click Detection
+   * #########################################################
+   */
 
   // Track mouse position for click vs drag detection
   const [mouseDownPos, setMouseDownPos] = useState<{
@@ -143,12 +110,17 @@ const Belief: React.FC<BeliefProps> = ({
     y: number;
   } | null>(null);
 
-  // Only allow edit if mouse up is close to mouse down (not a drag)
-  const handleCardMouseDown = (e: React.MouseEvent) => {
+  // Set MouseDown position on mouse down, to  detect click vs drag
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log("Mouse down on belief card");
     setMouseDownPos({ x: e.clientX, y: e.clientY });
+    // TODO set drag source ID if on acceptance, so we can handle add from App
   };
 
-  const handleCardMouseUp = (e: React.MouseEvent) => {
+  const handleMouseUpCard = (e: React.MouseEvent) => {
+    console.log("Mouse up on belief card");
+    e.stopPropagation();
     if (mouseDownPos) {
       const dx = e.clientX - mouseDownPos.x;
       const dy = e.clientY - mouseDownPos.y;
@@ -160,6 +132,34 @@ const Belief: React.FC<BeliefProps> = ({
     setMouseDownPos(null);
   };
 
+  const handleMouseUpAcceptance = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log("Mouse up on acceptance card");
+    if (mouseDownPos) {
+      const dx = e.clientX - mouseDownPos.x;
+      const dy = e.clientY - mouseDownPos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 5) {
+        if (e.currentTarget.id === "left-acceptance-card") {
+          handleLeftClick(e);
+        } else {
+          handleRightClick(e);
+        }
+      } else {
+        // TODO call end of drag handler - this will be where we handle adding beliefs
+        // TODO check if source belief is current
+        // TODO check if source belief is already connected to this belief
+        console.log("Drag detected, not toggling acceptance");
+      }
+      setMouseDownPos(null);
+    }
+  };
+
+  /*
+   * #########################################################
+   * Component Structure
+   * #########################################################
+   */
   return (
     <div
       id="belief-card"
@@ -170,9 +170,7 @@ const Belief: React.FC<BeliefProps> = ({
       <div
         id="left-acceptance-card"
         className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-end bg-${
-          (onAcceptanceLeftChange ? acceptanceLeft : localAcceptanceLeft)
-            ? "success"
-            : "danger"
+          localAcceptanceLeft ? "success" : "danger"
         } border border-light`}
         style={{
           width: 120,
@@ -183,19 +181,15 @@ const Belief: React.FC<BeliefProps> = ({
           transition: "background 0.2s, left 0.2s",
           left: editing ? 32 : -24,
         }}
-        onClick={handleLeftClick}
-        title={
-          (onAcceptanceLeftChange ? acceptanceLeft : localAcceptanceLeft)
-            ? "Accepted by Left (click to toggle)"
-            : "Not accepted by Left (click to toggle)"
-        }
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUpAcceptance}
       ></div>
       {/* Main belief card (foreground) */}
       <div
         id="belief-content"
         className="card bg-dark border border-light mb-3 flex-grow-1 position-relative mx-auto"
         style={{
-          cursor: onTextChange ? "pointer" : undefined,
+          cursor: "pointer",
           borderRadius: 8,
           minWidth,
           maxWidth,
@@ -204,8 +198,8 @@ const Belief: React.FC<BeliefProps> = ({
           zIndex: zIndex,
           boxShadow: "0 0 16px rgba(0,0,0,0.2)",
         }}
-        onMouseDown={handleCardMouseDown}
-        onMouseUp={handleCardMouseUp}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUpCard}
       >
         <div className="card-header text-light d-flex justify-content-between align-items-center">
           <div
@@ -216,7 +210,7 @@ const Belief: React.FC<BeliefProps> = ({
               alignItems: "center",
             }}
           >
-            {editing && onTextChange ? (
+            {editing ? (
               <textarea
                 className="form-control-plaintext bg-dark text-light border-0 p-0 m-0"
                 value={editValue}
@@ -236,41 +230,16 @@ const Belief: React.FC<BeliefProps> = ({
                 wrap="soft"
               />
             ) : (
-              <span style={{ whiteSpace: "pre-line" }}>{text}</span>
+              <span style={{ whiteSpace: "pre-line" }}>{editValue}</span>
             )}
           </div>
-          {/* </div>
-        <div className="card-body text-light">
-          {showDescription && <p className="card-text">{description}</p>}
-          {supports.length > 0 && (
-            <div className="mt-3">
-              <h6 className="text-info">Supports</h6>
-              <div className="ms-3">
-                {supports.map((belief, idx) => (
-                  <Belief key={idx} {...belief} />
-                ))}
-              </div>
-            </div>
-          )}
-          {opposes.length > 0 && (
-            <div className="mt-3">
-              <h6 className="text-warning">Opposes</h6>
-              <div className="ms-3">
-                {opposes.map((belief, idx) => (
-                  <Belief key={idx} {...belief} />
-                ))}
-              </div>
-            </div>
-          )} */}
         </div>
       </div>
       {/* Right acceptance card (background, extends right) */}
       <div
         id="right-acceptance-card"
         className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-start bg-${
-          (onAcceptanceRightChange ? acceptanceRight : localAcceptanceRight)
-            ? "success"
-            : "danger"
+          localAcceptanceRight ? "success" : "danger"
         } border border-light`}
         style={{
           width: 120,
@@ -281,12 +250,8 @@ const Belief: React.FC<BeliefProps> = ({
           transition: "background 0.2s, right 0.2s",
           right: editing ? 32 : -24,
         }}
-        onClick={handleRightClick}
-        title={
-          (onAcceptanceRightChange ? acceptanceRight : localAcceptanceRight)
-            ? "Accepted by Right (click to toggle)"
-            : "Not accepted by Right (click to toggle)"
-        }
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUpAcceptance}
       ></div>
     </div>
   );
