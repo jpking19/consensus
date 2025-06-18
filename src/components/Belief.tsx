@@ -1,34 +1,34 @@
 import React, { useState } from "react";
 
-interface BeliefProps {
+type Belief = {
   id: number;
   text: string;
-  description: string;
+  x: number; // Position of the belief card TODO do we need this?
+  y: number; // Position of the belief card TODO do we need this?
   acceptanceLeft: boolean;
   acceptanceRight: boolean;
-  supports?: BeliefProps[];
-  opposes?: BeliefProps[];
-  handleEditingBeliefChange: (id: number | null) => void;
-}
+  supports?: Belief[];
+  opposes?: Belief[];
+};
 
-const Belief: React.FC<BeliefProps> = ({
-  id,
-  text,
-  acceptanceLeft,
-  acceptanceRight,
-  supports = [],
-  opposes = [],
+function Belief({
+  belief,
   handleEditingBeliefChange,
-}) => {
+}: {
+  belief: Belief;
+  handleEditingBeliefChange: (id: number | null) => void;
+}) {
   const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(text);
+  const [editValue, setEditValue] = useState(belief.text);
   const [zIndex, setZIndex] = useState(3); // TODO: Z index should be lowered to base state when connected to another belief
 
   // Local state for acceptance if handlers are not provided
-  const [localAcceptanceLeft, setLocalAcceptanceLeft] =
-    useState(acceptanceLeft);
-  const [localAcceptanceRight, setLocalAcceptanceRight] =
-    useState(acceptanceRight);
+  const [localAcceptanceLeft, setLocalAcceptanceLeft] = useState(
+    belief.acceptanceLeft
+  );
+  const [localAcceptanceRight, setLocalAcceptanceRight] = useState(
+    belief.acceptanceRight
+  );
 
   const handleLeftClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -82,7 +82,7 @@ const Belief: React.FC<BeliefProps> = ({
   React.useEffect(() => {
     // Set this belief as the currently edited belief
     if (editing) {
-      handleEditingBeliefChange(id);
+      handleEditingBeliefChange(belief.id);
     }
 
     // Calculate width based on text length
@@ -255,6 +255,6 @@ const Belief: React.FC<BeliefProps> = ({
       ></div>
     </div>
   );
-};
+}
 
 export default Belief;

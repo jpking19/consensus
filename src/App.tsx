@@ -4,16 +4,14 @@ import React, { useState } from "react";
 function App() {
   const [editingBelief, setEditingBelief] = useState<number | null>(null);
   const [wasEditingBelief, setWasEditingBelief] = useState(false);
-  const [beliefs, setBeliefs] = useState([
+  const [beliefs, setBeliefs] = useState<Belief[]>([
     {
       id: 0,
       text: "The Earth orbits the Sun.",
-      description: "This is a foundational scientific fact.",
       acceptanceLeft: false,
       acceptanceRight: false,
       x: 0,
       y: 0,
-      locked: true, // Lock the first belief by default
     },
   ]);
 
@@ -89,12 +87,8 @@ function App() {
             >
               <div style={{ cursor: "grab", display: "inline-block" }}>
                 <Belief
-                  id={belief.id}
-                  text={belief.text}
+                  belief={belief}
                   handleEditingBeliefChange={handleEditingBeliefChange}
-                  description={belief.description}
-                  acceptanceLeft={belief.acceptanceLeft}
-                  acceptanceRight={belief.acceptanceRight}
                 />
               </div>
             </div>
@@ -111,12 +105,8 @@ function App() {
               }}
             >
               <Belief
-                id={belief.id}
-                text={belief.text}
+                belief={belief}
                 handleEditingBeliefChange={handleEditingBeliefChange}
-                description={belief.description}
-                acceptanceLeft={belief.acceptanceLeft}
-                acceptanceRight={belief.acceptanceRight}
               />
             </div>
           )
