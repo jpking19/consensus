@@ -11,6 +11,15 @@ function App() {
       acceptanceRight: false,
       x: 0,
       y: 0,
+      supports: [
+        {
+          id: 1,
+          text: "The Sun is the center of our solar system.",
+          acceptanceLeft: false,
+          acceptanceRight: false,
+        },
+      ],
+      opposes: [],
     },
   ]);
 

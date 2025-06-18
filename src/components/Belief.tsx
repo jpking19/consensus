@@ -3,10 +3,10 @@ import React, { useState } from "react";
 type Belief = {
   id: number;
   text: string;
-  x: number; // Position of the belief card TODO do we need this?
-  y: number; // Position of the belief card TODO do we need this?
   acceptanceLeft: boolean;
   acceptanceRight: boolean;
+  x?: number; // Position of the belief card TODO do we need this?
+  y?: number; // Position of the belief card TODO do we need this?
   supports?: Belief[];
   opposes?: Belief[];
 };
@@ -165,98 +165,120 @@ function Belief({
    * #########################################################
    */
   return (
-    <div
-      id="belief-card"
-      className="position-relative d-flex align-items-stretch"
-      style={{ gap: 0, minHeight }}
-    >
-      {/* Left acceptance card (background, extends left) */}
+    <div>
       <div
-        id="left-acceptance-card"
-        className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-end bg-${
-          localAcceptanceLeft ? "success" : "danger"
-        } border border-light`}
-        style={{
-          width: 120,
-          height: minHeight,
-          zIndex: zIndex - 1,
-          borderTopLeftRadius: 8,
-          borderBottomLeftRadius: 8,
-          transition: "background 0.2s, left 0.2s",
-          left: editing ? 32 : -24,
-        }}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUpAcceptance}
-      ></div>
-      {/* Main belief card (foreground) */}
-      <div
-        id="belief-content"
-        className="card bg-dark border border-light mb-3 flex-grow-1 position-relative mx-auto"
-        style={{
-          cursor: "pointer",
-          borderRadius: 8,
-          minWidth,
-          maxWidth,
-          width: cardWidth,
-          minHeight,
-          zIndex: zIndex,
-          boxShadow: "0 0 16px rgba(0,0,0,0.2)",
-        }}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUpCard}
+        id="belief-card"
+        className="position-relative d-flex align-items-stretch"
+        style={{ gap: 0, minHeight }}
       >
-        <div className="card-header text-light d-flex justify-content-between align-items-center">
-          <div
-            style={{
-              flex: 1,
-              minWidth: 0,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            {editing ? (
-              <textarea
-                className="form-control-plaintext bg-dark text-light border-0 p-0 m-0"
-                value={editValue}
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                autoFocus
-                style={{
-                  width: "100%",
-                  minWidth: 0,
-                  maxWidth: "100%",
-                  boxShadow: "none",
-                  resize: "none",
-                  overflow: "hidden",
-                }}
-                onClick={(e) => e.stopPropagation()}
-                rows={inputRows}
-                wrap="soft"
-              />
-            ) : (
-              <span style={{ whiteSpace: "pre-line" }}>{editValue}</span>
-            )}
+        {/* Left acceptance card (background, extends left) */}
+        <div
+          id="left-acceptance-card"
+          className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-end bg-${
+            localAcceptanceLeft ? "success" : "danger"
+          } border border-light`}
+          style={{
+            width: 120,
+            height: minHeight,
+            zIndex: zIndex - 1,
+            borderTopLeftRadius: 8,
+            borderBottomLeftRadius: 8,
+            transition: "background 0.2s, left 0.2s",
+            left: editing ? 32 : -24,
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUpAcceptance}
+        ></div>
+        {/* Main belief card (foreground) */}
+        <div
+          id="belief-content"
+          className="card bg-dark border border-light mb-3 flex-grow-1 position-relative mx-auto"
+          style={{
+            cursor: "pointer",
+            borderRadius: 8,
+            minWidth,
+            maxWidth,
+            width: cardWidth,
+            minHeight,
+            zIndex: zIndex,
+            boxShadow: "0 0 16px rgba(0,0,0,0.2)",
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUpCard}
+        >
+          <div className="card-header text-light d-flex justify-content-between align-items-center">
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              {editing ? (
+                <textarea
+                  className="form-control-plaintext bg-dark text-light border-0 p-0 m-0"
+                  value={editValue}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  autoFocus
+                  style={{
+                    width: "100%",
+                    minWidth: 0,
+                    maxWidth: "100%",
+                    boxShadow: "none",
+                    resize: "none",
+                    overflow: "hidden",
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  rows={inputRows}
+                  wrap="soft"
+                />
+              ) : (
+                <span style={{ whiteSpace: "pre-line" }}>{editValue}</span>
+              )}
+            </div>
           </div>
         </div>
+        {/* Right acceptance card (background, extends right) */}
+        <div
+          id="right-acceptance-card"
+          className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-start bg-${
+            localAcceptanceRight ? "success" : "danger"
+          } border border-light`}
+          style={{
+            width: 120,
+            height: minHeight,
+            zIndex: zIndex - 1,
+            borderTopRightRadius: 8,
+            borderBottomRightRadius: 8,
+            transition: "background 0.2s, right 0.2s",
+            right: editing ? 32 : -24,
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUpAcceptance}
+        ></div>
       </div>
-      {/* Right acceptance card (background, extends right) */}
-      <div
-        id="right-acceptance-card"
-        className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-start bg-${
-          localAcceptanceRight ? "success" : "danger"
-        } border border-light`}
-        style={{
-          width: 120,
-          height: minHeight,
-          zIndex: zIndex - 1,
-          borderTopRightRadius: 8,
-          borderBottomRightRadius: 8,
-          transition: "background 0.2s, right 0.2s",
-          right: editing ? 32 : -24,
-        }}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUpAcceptance}
-      ></div>
+      {/* Supporting Beliefs */}
+      <ul>
+        {belief.supports?.map((supportingBelief) => (
+          <Belief
+            key={supportingBelief.id}
+            belief={supportingBelief}
+            handleEditingBeliefChange={handleEditingBeliefChange}
+          />
+        ))}
+      </ul>
+      {/* Opposing Beliefs */}
+      <ul>
+        {belief.opposes?.map((opposingBelief) => (
+          <Belief
+            key={opposingBelief.id}
+            belief={opposingBelief}
+            handleEditingBeliefChange={handleEditingBeliefChange}
+          />
+        ))}
+      </ul>
     </div>
   );
 }
