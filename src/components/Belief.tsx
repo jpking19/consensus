@@ -18,11 +18,13 @@ function Belief({
   belief: Belief;
   handleEditingBeliefChange: (id: number | null) => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(belief.text);
   const [zIndex, setZIndex] = useState(3); // TODO: Z index should be lowered to base state when connected to another belief
 
-  // Local state for acceptance if handlers are not provided
+  /*
+   * #########################################################
+   * Acceptance
+   * #########################################################
+   */
   const [localAcceptanceLeft, setLocalAcceptanceLeft] = useState(
     belief.acceptanceLeft
   );
@@ -42,12 +44,14 @@ function Belief({
 
   /*
    * #########################################################
-   * Text Edit Detection
+   * Card Text Change
    * #########################################################
    */
   const minWidth = 200;
   const maxWidth = 400;
   const minHeight = 64;
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(belief.text);
   const [cardWidth, setCardWidth] = useState(minWidth);
   const [inputRows, setInputRows] = useState(1);
 
