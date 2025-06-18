@@ -94,6 +94,7 @@ function Belief({
       Math.max(getTextWidth(editValue) + 32, minWidth),
       maxWidth
     );
+    console.log("Calculated width: %d", width);
     setCardWidth(width);
 
     // Calculate number of rows needed
@@ -165,7 +166,16 @@ function Belief({
    * #########################################################
    */
   return (
-    <div>
+    <div
+      className="belief-container"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      {/* First row: main belief card */}
       <div
         id="belief-card"
         className="position-relative d-flex align-items-stretch"
@@ -174,17 +184,17 @@ function Belief({
         {/* Left acceptance card (background, extends left) */}
         <div
           id="left-acceptance-card"
-          className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-end bg-${
+          className={`position-relative top-0 bottom-0 d-flex flex-column justify-content-center align-items-end bg-${
             localAcceptanceLeft ? "success" : "danger"
           } border border-light`}
           style={{
-            width: 120,
+            width: 32,
             height: minHeight,
             zIndex: zIndex - 1,
             borderTopLeftRadius: 8,
             borderBottomLeftRadius: 8,
             transition: "background 0.2s, left 0.2s",
-            left: editing ? 32 : -24,
+            left: editing ? 48 : 8,
           }}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUpAcceptance}
@@ -192,7 +202,7 @@ function Belief({
         {/* Main belief card (foreground) */}
         <div
           id="belief-content"
-          className="card bg-dark border border-light mb-3 flex-grow-1 position-relative mx-auto"
+          className="position-relative card bg-dark border border-light mb-3 flex-grow-1 mx-auto"
           style={{
             cursor: "pointer",
             borderRadius: 8,
@@ -243,42 +253,72 @@ function Belief({
         {/* Right acceptance card (background, extends right) */}
         <div
           id="right-acceptance-card"
-          className={`position-absolute top-0 bottom-0 d-flex flex-column justify-content-center align-items-start bg-${
+          className={`position-relative top-0 bottom-0 d-flex flex-column justify-content-center align-items-start bg-${
             localAcceptanceRight ? "success" : "danger"
           } border border-light`}
           style={{
-            width: 120,
+            width: 32,
             height: minHeight,
             zIndex: zIndex - 1,
             borderTopRightRadius: 8,
             borderBottomRightRadius: 8,
             transition: "background 0.2s, right 0.2s",
-            right: editing ? 32 : -24,
+            right: editing ? 48 : 8,
           }}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUpAcceptance}
         ></div>
       </div>
-      {/* Supporting Beliefs */}
-      <ul>
-        {belief.supports?.map((supportingBelief) => (
-          <Belief
-            key={supportingBelief.id}
-            belief={supportingBelief}
-            handleEditingBeliefChange={handleEditingBeliefChange}
-          />
-        ))}
-      </ul>
-      {/* Opposing Beliefs */}
-      <ul>
-        {belief.opposes?.map((opposingBelief) => (
-          <Belief
-            key={opposingBelief.id}
-            belief={opposingBelief}
-            handleEditingBeliefChange={handleEditingBeliefChange}
-          />
-        ))}
-      </ul>
+      {/* Second row: supporting and opposing beliefs */}
+      {belief.supports?.length || belief.opposes?.length ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            width: "100%",
+            marginTop: 8,
+            gap: 0,
+          }}
+        >
+          {/* Supporting beliefs (left 50%) */}
+          <div
+            style={{
+              width: "45%",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              gap: 16,
+            }}
+          >
+            {belief.supports?.map((supportingBelief) => (
+              <Belief
+                key={supportingBelief.id}
+                belief={supportingBelief}
+                handleEditingBeliefChange={handleEditingBeliefChange}
+              />
+            ))}
+          </div>
+          {/* Spacer to center the main belief card */}
+          <div style={{ width: "10%" }}></div>
+          {/* Opposing beliefs (right 50%) */}
+          <div
+            style={{
+              width: "45%",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-start",
+            }}
+          >
+            {belief.opposes?.map((opposingBelief) => (
+              <Belief
+                key={opposingBelief.id}
+                belief={opposingBelief}
+                handleEditingBeliefChange={handleEditingBeliefChange}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -18,8 +18,29 @@ function App() {
           acceptanceLeft: false,
           acceptanceRight: false,
         },
+        {
+          id: 2,
+          text: "The Earth is a planet that revolves around the Sun.",
+          acceptanceLeft: false,
+          acceptanceRight: false,
+          supports: [
+            {
+              id: 4,
+              text: "The Earth has a stable orbit around the Sun.",
+              acceptanceLeft: false,
+              acceptanceRight: false,
+            },
+          ],
+        },
       ],
-      opposes: [],
+      opposes: [
+        {
+          id: 3,
+          text: "The Earth is flat.",
+          acceptanceLeft: false,
+          acceptanceRight: false,
+        },
+      ],
     },
   ]);
 
@@ -73,48 +94,35 @@ function App() {
 
   return (
     <div
-      className="App p-4 bg-secondary min-vh-100 position-relative"
+      className="App p-4 bg-secondary position-relative"
       style={{ zIndex: 0, minHeight: "100vh", minWidth: "100vw" }}
+      onMouseUp={handleBgClick}
     >
-      <div
-        className="position-absolute w-100 h-100"
-        onMouseUp={handleBgClick}
-        style={{ top: 0, left: 0, zIndex: 0 }}
-      >
-        {beliefs.map((belief, idx) =>
-          idx === 0 ? (
-            <div
-              className="w-100 d-flex justify-content-center"
-              key={idx}
-              style={{ zIndex: 1 }}
-            >
-              <div style={{ cursor: "grab", display: "inline-block" }}>
-                <Belief
-                  belief={belief}
-                  handleEditingBeliefChange={handleEditingBeliefChange}
-                />
-              </div>
-            </div>
-          ) : (
-            <div
-              className="position-absolute"
-              key={idx}
-              style={{
-                left: belief.x,
-                top: belief.y,
-                zIndex: 3,
-                cursor: "grab",
-                display: "inline-block",
-              }}
-            >
-              <Belief
-                belief={belief}
-                handleEditingBeliefChange={handleEditingBeliefChange}
-              />
-            </div>
-          )
-        )}
-      </div>
+      {beliefs.map((belief, idx) =>
+        idx === 0 ? (
+          <div key={idx} style={{ zIndex: 1 }}>
+            <Belief
+              belief={belief}
+              handleEditingBeliefChange={handleEditingBeliefChange}
+            />
+          </div>
+        ) : (
+          <div
+            className="position-absolute"
+            key={idx}
+            style={{
+              left: belief.x,
+              top: belief.y,
+              zIndex: 3,
+            }}
+          >
+            <Belief
+              belief={belief}
+              handleEditingBeliefChange={handleEditingBeliefChange}
+            />
+          </div>
+        )
+      )}
     </div>
   );
 }
