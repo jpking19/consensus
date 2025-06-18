@@ -3,7 +3,6 @@ import React, { useState } from "react";
 
 function App() {
   const [editingBelief, setEditingBelief] = useState<number | null>(null);
-  const [wasEditingBelief, setWasEditingBelief] = useState(false);
   const [beliefs, setBeliefs] = useState<Belief[]>([
     {
       id: 0,
@@ -23,11 +22,6 @@ function App() {
 
   const handleEditingBeliefChange = (id: number | null) => {
     console.log("Editing belief changed to:", id);
-    // If we were editing a belief, we need to reset the state
-    if (id === null) {
-      setWasEditingBelief(true);
-    }
-
     setEditingBelief(id);
   };
 
