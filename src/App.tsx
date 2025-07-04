@@ -10,65 +10,15 @@ function App() {
       acceptanceLeft: false,
       acceptanceRight: false,
       x: 0,
-      y: 0,
+      y: -540,
       supports: [
         {
           id: 1,
           text: "The Sun is the center of our solar system.",
           acceptanceLeft: false,
           acceptanceRight: false,
-        },
-        {
-          id: 2,
-          text: "The Earth is a planet that revolves around the Sun.",
-          acceptanceLeft: false,
-          acceptanceRight: false,
-          supports: [
-            {
-              id: 4,
-              text: "The Earth has a stable orbit around the Sun.",
-              acceptanceLeft: false,
-              acceptanceRight: false,
-              opposes: [
-                {
-                  id: 8,
-                  text: "The Earth's orbit is unstable.",
-                  acceptanceLeft: false,
-                  acceptanceRight: false,
-                },
-              ],
-            },
-          ],
-          opposes: [
-            {
-              id: 5,
-              text: "The Earth is not a planet.",
-              acceptanceLeft: false,
-              acceptanceRight: false,
-              supports: [
-                {
-                  id: 6,
-                  text: "The Earth is a flat disc.",
-                  acceptanceLeft: false,
-                  acceptanceRight: false,
-                },
-                {
-                  id: 7,
-                  text: "The Earth is a cube.",
-                  acceptanceLeft: false,
-                  acceptanceRight: false,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-      opposes: [
-        {
-          id: 3,
-          text: "The Earth is flat.",
-          acceptanceLeft: false,
-          acceptanceRight: false,
+          x: 100,
+          y: 100,
         },
       ],
     },
@@ -122,37 +72,44 @@ function App() {
     }
   };
 
+  // Recursively update a belief's x/y by id in a nested belief tree
+  function updateBeliefPosition(
+    beliefs: Belief[],
+    id: number,
+    x: number,
+    y: number
+  ): Belief[] {
+    return beliefs.map((b) => {
+      if (b.id === id) {
+        return { ...b, x, y };
+      }
+      let updated = { ...b };
+      if (b.supports) {
+        updated.supports = updateBeliefPosition(b.supports, id, x, y);
+      }
+      if (b.opposes) {
+        updated.opposes = updateBeliefPosition(b.opposes, id, x, y);
+      }
+      return updated;
+    });
+  }
+
   return (
     <div
       className="App p-4 bg-secondary position-relative"
       style={{ zIndex: 0, minHeight: "100vh", minWidth: "100vw" }}
       onMouseUp={handleBgClick}
     >
-      {beliefs.map((belief, idx) =>
-        idx === 0 ? (
-          <div key={idx} style={{ zIndex: 1 }}>
-            <Belief
-              belief={belief}
-              handleEditingBeliefChange={handleEditingBeliefChange}
-            />
-          </div>
-        ) : (
-          <div
-            className="position-absolute"
-            key={idx}
-            style={{
-              left: belief.x,
-              top: belief.y,
-              zIndex: 3,
-            }}
-          >
-            <Belief
-              belief={belief}
-              handleEditingBeliefChange={handleEditingBeliefChange}
-            />
-          </div>
-        )
-      )}
+      {beliefs.map((belief) => (
+        <Belief
+          key={belief.id}
+          belief={belief}
+          handleEditingBeliefChange={handleEditingBeliefChange}
+          onPositionChange={(newX, newY, id = belief.id) => {
+            setBeliefs((prev) => updateBeliefPosition(prev, id, newX, newY));
+          }}
+        />
+      ))}
     </div>
   );
 }

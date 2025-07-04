@@ -5,8 +5,8 @@ type Belief = {
   text: string;
   acceptanceLeft: boolean;
   acceptanceRight: boolean;
-  x?: number; // Position of the belief card TODO do we need this?
-  y?: number; // Position of the belief card TODO do we need this?
+  x: number;
+  y: number;
   supports?: Belief[];
   opposes?: Belief[];
 };
@@ -14,9 +14,11 @@ type Belief = {
 function Belief({
   belief,
   handleEditingBeliefChange,
+  onPositionChange,
 }: {
   belief: Belief;
   handleEditingBeliefChange: (id: number | null) => void;
+  onPositionChange?: (x: number, y: number, id?: number) => void; // <-- Accept optional id
 }) {
   const [zIndex, setZIndex] = useState(3); // TODO: Z index should be lowered to base state when connected to another belief
 
@@ -94,7 +96,6 @@ function Belief({
       Math.max(getTextWidth(editValue) + 32, minWidth),
       maxWidth
     );
-    console.log("Calculated width: %d", width);
     setCardWidth(width);
 
     // Calculate number of rows needed
@@ -115,23 +116,41 @@ function Belief({
     y: number;
   } | null>(null);
 
-  // Set MouseDown position on mouse down, to  detect click vs drag
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Drag state
+  const [dragging, setDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
+    null
+  );
+
+  // Set MouseDown position on mouse down, to detect click vs drag
+  const handleMouseDownCard = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("Mouse down on belief card");
     setMouseDownPos({ x: e.clientX, y: e.clientY });
-    // TODO set drag source ID if on acceptance, so we can handle add from App
+    setDragging(true);
+    setDragOffset({
+      x: e.clientX - absX,
+      y: e.clientY - absY,
+    });
+  };
+
+  const handleMouseDownAcceptance = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMouseDownPos({ x: e.clientX, y: e.clientY });
   };
 
   const handleMouseUpCard = (e: React.MouseEvent) => {
-    console.log("Mouse up on belief card");
-    e.stopPropagation();
     if (mouseDownPos) {
       const dx = e.clientX - mouseDownPos.x;
       const dy = e.clientY - mouseDownPos.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < 5) {
         setEditing(true);
+      } else {
+        setDragging(true);
+        setDragOffset({
+          x: e.clientX - absX,
+          y: e.clientY - absY,
+        });
       }
     }
     setMouseDownPos(null);
@@ -150,15 +169,32 @@ function Belief({
         } else {
           handleRightClick(e);
         }
-      } else {
-        // TODO call end of drag handler - this will be where we handle adding beliefs
-        // TODO check if source belief is current
-        // TODO check if source belief is already connected to this belief
-        console.log("Drag detected, not toggling acceptance");
       }
       setMouseDownPos(null);
     }
   };
+
+  // Handle mouse move for dragging belief to new position
+  React.useEffect(() => {
+    if (!dragging) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragOffset) return;
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      if (onPositionChange) onPositionChange(newX, newY);
+    };
+    const handleMouseUp = () => {
+      setDragging(false);
+      setDragOffset(null);
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragging, dragOffset, onPositionChange]);
 
   React.useEffect(() => {
     // Update belief text when editing is done
@@ -176,14 +212,27 @@ function Belief({
    * Component Structure
    * #########################################################
    */
+  // Calculate absolute position for this belief
+  let absX = belief.x;
+  let absY = belief.y;
+
   return (
     <div
       className="belief-container"
       style={{
+        position: "absolute",
+        left: absX,
+        top: absY,
+        // ...existing container styles...
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 0,
+        justifyContent: "center",
+        gap: 8,
+        width: "100%",
+        height: "100%",
+        margin: "0 auto",
+        pointerEvents: "auto",
       }}
     >
       {/* First row: main belief card */}
@@ -207,7 +256,7 @@ function Belief({
             transition: "background 0.2s, left 0.2s",
             left: editing ? 48 : 8,
           }}
-          onMouseDown={handleMouseDown}
+          onMouseDown={handleMouseDownAcceptance}
           onMouseUp={handleMouseUpAcceptance}
         ></div>
         {/* Main belief card (foreground) */}
@@ -224,7 +273,7 @@ function Belief({
             zIndex: zIndex,
             boxShadow: "0 0 16px rgba(0,0,0,0.2)",
           }}
-          onMouseDown={handleMouseDown}
+          onMouseDown={handleMouseDownCard}
           onMouseUp={handleMouseUpCard}
         >
           <div className="card-header text-light d-flex justify-content-between align-items-center">
@@ -276,7 +325,7 @@ function Belief({
             transition: "background 0.2s, right 0.2s",
             right: editing ? 48 : 8,
           }}
-          onMouseDown={handleMouseDown}
+          onMouseDown={handleMouseDownAcceptance}
           onMouseUp={handleMouseUpAcceptance}
         ></div>
       </div>
@@ -306,11 +355,13 @@ function Belief({
                 key={supportingBelief.id}
                 belief={supportingBelief}
                 handleEditingBeliefChange={handleEditingBeliefChange}
+                onPositionChange={(newX, newY) =>
+                  onPositionChange &&
+                  onPositionChange(newX, newY, supportingBelief.id)
+                }
               />
             ))}
           </div>
-          {/* Spacer to center the main belief card */}
-          {/* <div style={{ width: cardWidth }}></div> */}
           {/* Opposing beliefs (right 50%) */}
           <div
             style={{
@@ -325,6 +376,10 @@ function Belief({
                 key={opposingBelief.id}
                 belief={opposingBelief}
                 handleEditingBeliefChange={handleEditingBeliefChange}
+                onPositionChange={(newX, newY) =>
+                  onPositionChange &&
+                  onPositionChange(newX, newY, opposingBelief.id)
+                }
               />
             ))}
           </div>
