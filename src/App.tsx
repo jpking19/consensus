@@ -29,6 +29,36 @@ function App() {
               text: "The Earth has a stable orbit around the Sun.",
               acceptanceLeft: false,
               acceptanceRight: false,
+              opposes: [
+                {
+                  id: 8,
+                  text: "The Earth's orbit is unstable.",
+                  acceptanceLeft: false,
+                  acceptanceRight: false,
+                },
+              ],
+            },
+          ],
+          opposes: [
+            {
+              id: 5,
+              text: "The Earth is not a planet.",
+              acceptanceLeft: false,
+              acceptanceRight: false,
+              supports: [
+                {
+                  id: 6,
+                  text: "The Earth is a flat disc.",
+                  acceptanceLeft: false,
+                  acceptanceRight: false,
+                },
+                {
+                  id: 7,
+                  text: "The Earth is a cube.",
+                  acceptanceLeft: false,
+                  acceptanceRight: false,
+                },
+              ],
             },
           ],
         },

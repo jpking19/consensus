@@ -160,6 +160,17 @@ function Belief({
     }
   };
 
+  React.useEffect(() => {
+    // Update belief text when editing is done
+    if (!editing) {
+      belief.text = editValue;
+      // Reset acceptance states when editing is done
+      belief.acceptanceLeft = localAcceptanceLeft;
+      belief.acceptanceRight = localAcceptanceRight;
+      handleEditingBeliefChange(null); // Reset editing belief
+    }
+  }, [editing]);
+
   /*
    * #########################################################
    * Component Structure
@@ -172,7 +183,7 @@ function Belief({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 8,
+        gap: 0,
       }}
     >
       {/* First row: main belief card */}
@@ -283,7 +294,7 @@ function Belief({
           {/* Supporting beliefs (left 50%) */}
           <div
             style={{
-              width: "45%",
+              width: "50%",
               display: "flex",
               flexDirection: "row",
               justifyContent: "flex-end",
@@ -299,11 +310,11 @@ function Belief({
             ))}
           </div>
           {/* Spacer to center the main belief card */}
-          <div style={{ width: "10%" }}></div>
+          {/* <div style={{ width: cardWidth }}></div> */}
           {/* Opposing beliefs (right 50%) */}
           <div
             style={{
-              width: "45%",
+              width: "50%",
               display: "flex",
               flexDirection: "row",
               justifyContent: "flex-start",
