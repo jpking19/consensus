@@ -1,6 +1,7 @@
 import Belief from "./components/Belief";
 import React, { useState } from "react";
 
+let nextId = 3; // Start from 3 since we have two initial beliefs
 function App() {
   const [editingBelief, setEditingBelief] = useState<number | null>(null);
   const [beliefs, setBeliefs] = useState<Belief[]>([
@@ -10,7 +11,7 @@ function App() {
       acceptanceLeft: false,
       acceptanceRight: false,
       x: 0,
-      y: -540,
+      y: 0,
       supports: [
         {
           id: 1,
@@ -19,6 +20,16 @@ function App() {
           acceptanceRight: false,
           x: 100,
           y: 100,
+          supports: [
+            {
+              id: 2,
+              text: "The Sun is a star.",
+              acceptanceLeft: false,
+              acceptanceRight: false,
+              x: 200,
+              y: 200,
+            },
+          ],
         },
       ],
     },
@@ -37,7 +48,7 @@ function App() {
 
   const handleAddBeliefAt = (x: number, y: number) => {
     setBeliefs((prev) => {
-      const newId = prev.length;
+      const newId = nextId++;
       // Add the new belief
       const newBeliefs = [
         ...prev,

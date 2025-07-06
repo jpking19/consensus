@@ -228,9 +228,6 @@ function Belief({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
-        width: "100%",
-        height: "100%",
         margin: "0 auto",
         pointerEvents: "auto",
       }}
@@ -272,6 +269,10 @@ function Belief({
             minHeight,
             zIndex: zIndex,
             boxShadow: "0 0 16px rgba(0,0,0,0.2)",
+            userSelect: editing ? "text" : "none",
+            WebkitUserSelect: editing ? "text" : "none",
+            MozUserSelect: editing ? "text" : "none",
+            msUserSelect: editing ? "text" : "none",
           }}
           onMouseDown={handleMouseDownCard}
           onMouseUp={handleMouseUpCard}
