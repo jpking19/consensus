@@ -73,6 +73,7 @@ function Belief({
   };
 
   const handleInputBlur = () => {
+    console.log("Input blurred, saving changes");
     setEditing(false);
   };
 

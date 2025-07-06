@@ -1,5 +1,6 @@
 import Belief from "./components/Belief";
 import React, { useState } from "react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 let nextId = 3; // Start from 3 since we have two initial beliefs
 function App() {
@@ -67,21 +68,27 @@ function App() {
     });
   };
 
-  const handleBgClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target == e.currentTarget) {
-      // Reset editing state if we were editing a belief
-      if (editingBelief !== null) {
-        setEditingBelief(null);
-      } else {
-        // Prevent adding belief if clicking on an existing belief
-        // Get click position relative to the container
-        const rect = e.currentTarget.getBoundingClientRect();
+  // Listen for ctrl+click anywhere in the document
+  React.useEffect(() => {
+    const handleCtrlClick = (e: MouseEvent) => {
+      if (e.ctrlKey) {
+        // Get click position relative to the app container
+        const appDiv = document.querySelector(".App");
+        if (!appDiv) return;
+        const rect = appDiv.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         handleAddBeliefAt(x, y);
       }
-    }
-  };
+
+      // If currently editing a belief, stop editing
+      if (editingBelief !== null) {
+        setEditingBelief(null);
+      }
+    };
+    document.addEventListener("click", handleCtrlClick);
+    return () => document.removeEventListener("click", handleCtrlClick);
+  }, []);
 
   // Recursively update a belief's x/y by id in a nested belief tree
   function updateBeliefPosition(
@@ -107,20 +114,45 @@ function App() {
 
   return (
     <div
-      className="App p-4 bg-secondary position-relative"
-      style={{ zIndex: 0, minHeight: "100vh", minWidth: "100vw" }}
-      onMouseUp={handleBgClick}
+      id="background-container"
+      className="bg-secondary position-relative"
+      tabIndex={0}
+      onClick={(e) => {
+        // Focus the background container on click to end Belief editing
+        if (editingBelief !== null) {
+          setEditingBelief(null);
+        }
+        document.getElementById("background-container")?.focus();
+      }}
     >
-      {beliefs.map((belief) => (
-        <Belief
-          key={belief.id}
-          belief={belief}
-          handleEditingBeliefChange={handleEditingBeliefChange}
-          onPositionChange={(newX, newY, id = belief.id) => {
-            setBeliefs((prev) => updateBeliefPosition(prev, id, newX, newY));
-          }}
-        />
-      ))}
+      <TransformWrapper limitToBounds={false}>
+        <TransformComponent>
+          <div
+            className="App p-4 bg-secondary position-relative"
+            style={{ zIndex: 0, minHeight: "100vh", minWidth: "100vw" }}
+            onMouseDown={(e) => {
+              if (editingBelief !== null) {
+                setEditingBelief(null);
+              }
+              document.getElementById("background-container")?.focus();
+            }}
+            tabIndex={0}
+          >
+            {beliefs.map((belief) => (
+              <Belief
+                key={belief.id}
+                belief={belief}
+                handleEditingBeliefChange={handleEditingBeliefChange}
+                onPositionChange={(newX, newY, id = belief.id) => {
+                  setBeliefs((prev) =>
+                    updateBeliefPosition(prev, id, newX, newY)
+                  );
+                }}
+              />
+            ))}
+          </div>
+        </TransformComponent>
+      </TransformWrapper>
     </div>
   );
 }
