@@ -122,15 +122,16 @@ function Belief({
     null
   );
 
-  // Set MouseDown position on mouse down, to detect click vs drag
+  // State for absolute position
+  const [x, setX] = useState(belief.x);
+  const [y, setY] = useState(belief.y);
+
+  // Mouse down: record mouse and belief position, but do not start drag yet
   const handleMouseDownCard = (e: React.MouseEvent) => {
     e.stopPropagation();
     setMouseDownPos({ x: e.clientX, y: e.clientY });
     setDragging(true);
-    setDragOffset({
-      x: e.clientX - absX,
-      y: e.clientY - absY,
-    });
+    setDragOffset({ x: e.clientX - x, y: e.clientY - y });
   };
 
   const handleMouseDownAcceptance = (e: React.MouseEvent) => {
@@ -148,8 +149,8 @@ function Belief({
       } else {
         setDragging(true);
         setDragOffset({
-          x: e.clientX - absX,
-          y: e.clientY - absY,
+          x: e.clientX - x,
+          y: e.clientY - y,
         });
       }
     }
@@ -181,7 +182,9 @@ function Belief({
       if (!dragOffset) return;
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
-      if (onPositionChange) onPositionChange(newX, newY);
+      setX(newX);
+      setY(newY);
+      if (onPositionChange) onPositionChange(dragOffset.x, dragOffset.y);
     };
     const handleMouseUp = () => {
       setDragging(false);
@@ -212,17 +215,14 @@ function Belief({
    * Component Structure
    * #########################################################
    */
-  // Calculate absolute position for this belief
-  let absX = belief.x;
-  let absY = belief.y;
 
   return (
     <div
       className="belief-container"
       style={{
         position: "absolute",
-        left: absX,
-        top: absY,
+        left: x,
+        top: y,
         // ...existing container styles...
         display: "flex",
         flexDirection: "column",
