@@ -54,6 +54,9 @@ function Belief({
   const minHeight = 64;
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(belief.text);
+  const [contentHovering, setContentHovering] = useState(false);
+  const [acceptanceHovering, setAcceptanceHovering] = useState(false);
+  const [lineageHovering, setLineageHovering] = useState(false); // TODO this is not used yet, but will be for showing lineage connections
   const [cardWidth, setCardWidth] = useState(minWidth);
   const [inputRows, setInputRows] = useState(1);
 
@@ -211,6 +214,40 @@ function Belief({
     }
   }, [editing]);
 
+  // Get outline style based on acceptance states
+  const getOutlineStyle = () => {
+    if (editing) {
+      return "3px solid #ffffff"; // Yellow outline when editing
+    } else if (contentHovering || acceptanceHovering) {
+      return "3px solid #ffffff"; // White outline when hovering over content
+    } else if (acceptanceHovering) {
+      // TODO
+    } else if (localAcceptanceLeft && localAcceptanceRight) {
+      // TODO what looks good for both accepted?
+    } else if (possibleConsensus()) {
+      // TODO only want to indicate which one is accepted
+      return "3px solid #ffc107";
+    } else {
+      return "1px solid #ffffff"; // Default gray outline
+    }
+  };
+
+  // Get content transition style based on acceptance states
+  const getOutlineTransitionStyle = () => {
+    // TODO may need transition styles as some point
+    // if (editing) {
+    //   return "outline-width 0.2s, outline-color 0.2s";
+    // } else {
+    return "";
+    // }
+  };
+
+  // Check if acceptance is possible
+  const possibleConsensus = () => {
+    // TODO this needs to look at supporting and opposing beliefs
+    return !(localAcceptanceLeft && localAcceptanceRight);
+  };
+
   /*
    * #########################################################
    * Component Structure
@@ -224,7 +261,6 @@ function Belief({
         position: "absolute",
         left: x,
         top: y,
-        // ...existing container styles...
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -232,6 +268,8 @@ function Belief({
         margin: "0 auto",
         pointerEvents: "auto",
       }}
+      onMouseEnter={() => setLineageHovering(true)}
+      onMouseLeave={() => setLineageHovering(false)}
     >
       {/* First row: main belief card */}
       <div
@@ -251,15 +289,16 @@ function Belief({
             zIndex: zIndex - 1,
             borderTopLeftRadius: 8,
             borderBottomLeftRadius: 8,
-            transition:
-              "background 0.2s, left 0.2s, outline-width 0.2s, outline-color 0.2s",
+            transition: `background 0.2s, left 0.2s, ${getOutlineTransitionStyle()}`,
             left: editing ? 48 : 8,
             borderWidth: 1,
-            outline: editing ? "3px solid #ffc107" : "none",
+            outline: getOutlineStyle(),
             outlineOffset: "-2px",
           }}
           onMouseDown={handleMouseDownAcceptance}
           onMouseUp={handleMouseUpAcceptance}
+          onMouseEnter={() => setAcceptanceHovering(true)}
+          onMouseLeave={() => setAcceptanceHovering(false)}
         ></div>
         {/* Main belief card (foreground) */}
         <div
@@ -279,12 +318,14 @@ function Belief({
             MozUserSelect: editing ? "text" : "none",
             msUserSelect: editing ? "text" : "none",
             borderWidth: 1,
-            outline: editing ? "3px solid #ffc107" : "none",
+            outline: getOutlineStyle(),
             outlineOffset: "-2px",
-            transition: "outline-width 0.2s, outline-color 0.2s",
+            transition: getOutlineTransitionStyle(),
           }}
           onMouseDown={handleMouseDownCard}
           onMouseUp={handleMouseUpCard}
+          onMouseEnter={() => setContentHovering(true)}
+          onMouseLeave={() => setContentHovering(false)}
         >
           <div className="card-header text-light d-flex justify-content-between align-items-center">
             <div
@@ -332,15 +373,16 @@ function Belief({
             zIndex: zIndex - 1,
             borderTopRightRadius: 8,
             borderBottomRightRadius: 8,
-            transition:
-              "background 0.2s, right 0.2s, outline-width 0.2s, outline-color 0.2s",
+            transition: `background 0.2s, right 0.2s, ${getOutlineTransitionStyle()}`,
             right: editing ? 48 : 8,
             borderWidth: 1,
-            outline: editing ? "3px solid #ffc107" : "none",
+            outline: getOutlineStyle(),
             outlineOffset: "-2px",
           }}
           onMouseDown={handleMouseDownAcceptance}
           onMouseUp={handleMouseUpAcceptance}
+          onMouseEnter={() => setAcceptanceHovering(true)}
+          onMouseLeave={() => setAcceptanceHovering(false)}
         ></div>
       </div>
       {/* Second row: supporting and opposing beliefs */}
