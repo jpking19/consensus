@@ -251,8 +251,12 @@ function Belief({
             zIndex: zIndex - 1,
             borderTopLeftRadius: 8,
             borderBottomLeftRadius: 8,
-            transition: "background 0.2s, left 0.2s",
+            transition:
+              "background 0.2s, left 0.2s, outline-width 0.2s, outline-color 0.2s",
             left: editing ? 48 : 8,
+            borderWidth: 1,
+            outline: editing ? "3px solid #ffc107" : "none",
+            outlineOffset: "-2px",
           }}
           onMouseDown={handleMouseDownAcceptance}
           onMouseUp={handleMouseUpAcceptance}
@@ -274,6 +278,10 @@ function Belief({
             WebkitUserSelect: editing ? "text" : "none",
             MozUserSelect: editing ? "text" : "none",
             msUserSelect: editing ? "text" : "none",
+            borderWidth: 1,
+            outline: editing ? "3px solid #ffc107" : "none",
+            outlineOffset: "-2px",
+            transition: "outline-width 0.2s, outline-color 0.2s",
           }}
           onMouseDown={handleMouseDownCard}
           onMouseUp={handleMouseUpCard}
@@ -324,8 +332,12 @@ function Belief({
             zIndex: zIndex - 1,
             borderTopRightRadius: 8,
             borderBottomRightRadius: 8,
-            transition: "background 0.2s, right 0.2s",
+            transition:
+              "background 0.2s, right 0.2s, outline-width 0.2s, outline-color 0.2s",
             right: editing ? 48 : 8,
+            borderWidth: 1,
+            outline: editing ? "3px solid #ffc107" : "none",
+            outlineOffset: "-2px",
           }}
           onMouseDown={handleMouseDownAcceptance}
           onMouseUp={handleMouseUpAcceptance}
