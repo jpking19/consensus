@@ -1,0 +1,12 @@
+.xy-theme__input {
+  background-color: var(--color-background);
+  border-color: var(--color-background);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  color: inherit;
+}
+
+.xy-theme__input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(255, 0, 115, 0.3);
+}
