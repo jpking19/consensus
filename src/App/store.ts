@@ -1,7 +1,6 @@
 import {
   type Edge,
   type EdgeChange,
-  type Node,
   type NodeChange,
   type OnNodesChange,
   type OnEdgesChange,
@@ -13,12 +12,15 @@ import {
 import { create } from "zustand";
 import { nanoid } from "nanoid/non-secure";
 
+import type { BeliefNode } from "./types";
+
 export type RFState = {
-  nodes: Node[];
+  nodes: BeliefNode[];
   edges: Edge[];
-  onNodesChange: OnNodesChange;
+  onNodesChange: OnNodesChange<BeliefNode>;
   onEdgesChange: OnEdgesChange;
-  addChildNode: (parentNode: Node, position: XYPosition) => void;
+  updateNodeLabel: (nodeId: string, label: string) => void;
+  addChildNode: (parentNode: InternalNode, position: XYPosition) => void;
 };
 
 const useStore = create<RFState>((set, get) => ({
@@ -31,7 +33,7 @@ const useStore = create<RFState>((set, get) => ({
     },
   ],
   edges: [],
-  onNodesChange: (changes: NodeChange[]) => {
+  onNodesChange: (changes: NodeChange<BeliefNode>[]) => {
     set({
       nodes: applyNodeChanges(changes, get().nodes),
     });
@@ -41,13 +43,37 @@ const useStore = create<RFState>((set, get) => ({
       edges: applyEdgeChanges(changes, get().edges),
     });
   },
-  addChildNode: (parentNode: Node, position: XYPosition) => {
-    const newNode = {
+  updateNodeLabel: (nodeId: string, label: string) => {
+    set({
+      nodes: get().nodes.map((node) => {
+        console.log(
+          "Updating node",
+          node.id,
+          "compared to id",
+          nodeId,
+          "to label",
+          label
+        );
+        if (node.id === nodeId) {
+          // it's important to create a new node here, to inform React Flow about the changes
+          return {
+            ...node,
+            data: { ...node.data, label },
+          };
+        }
+
+        return node;
+      }),
+    });
+  },
+  addChildNode: (parentNode: InternalNode, position: XYPosition) => {
+    // TODO need to support node without a parent
+    const newNode: BeliefNode = {
       id: nanoid(),
       type: "belief",
       data: { label: "New Node" },
       position,
-      parentNode: parentNode.id,
+      parentId: parentNode.id,
     };
 
     // TODO needs to account for the source of the connection

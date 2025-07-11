@@ -78,10 +78,10 @@ function Flow() {
     <ReactFlow
       nodes={nodes}
       edges={edges}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       onConnectStart={onConnectStart}
       onConnectEnd={onConnectEnd}
       nodeOrigin={nodeOrigin}
