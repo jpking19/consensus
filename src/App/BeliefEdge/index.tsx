@@ -6,10 +6,12 @@ function BeliefEdge(props: EdgeProps) {
   const { id, sourceX, sourceY, targetX, targetY, animated } = props;
 
   const [edgePath] = getBezierPath({
-    targetX,
-    targetY,
     sourceX,
     sourceY,
+    sourcePosition: props.sourcePosition,
+    targetPosition: props.targetPosition,
+    targetX,
+    targetY,
   });
 
   return (

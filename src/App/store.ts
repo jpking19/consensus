@@ -53,6 +53,20 @@ const useStore = create<RFState>((set, get) => ({
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
+          const currentLabel = node.data.label;
+          if (label !== currentLabel) {
+            // If the label has changed, reset acceptance states
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                label,
+                leftAcceptance: false,
+                rightAcceptance: false,
+              },
+            };
+          }
+
           // it's important to create a new node here, to inform React Flow about the changes
           return {
             ...node,
