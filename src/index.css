@@ -746,6 +746,10 @@ svg.react-flow__connectionline {
   fill-opacity: 0.4;
 }
 
+.react-flow__node.disabled {
+  fill-opacity: 0.4;
+}
+
 .react-flow__controls-button:last-child {
   border-bottom: none;
 }

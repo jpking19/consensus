@@ -18,7 +18,12 @@ export type RFState = {
   edges: BeliefEdge[];
   onNodesChange: OnNodesChange<BeliefNode>;
   onEdgesChange: OnEdgesChange<BeliefEdge>;
-  updateNodeLabel: (nodeId: string, label: string) => void;
+  updateNodeLabel: (
+    nodeId: string,
+    label: string,
+    resetLeftChildren: boolean,
+    resetRightChildren: boolean
+  ) => void;
   updateNodeUserAcceptance: (
     nodeId: string,
     side: "left" | "right",
@@ -41,6 +46,7 @@ const useStore = create<RFState>((set, get) => ({
       type: "belief",
       data: {
         label: "",
+        user: "both", // Indicates this belief is shared by both users
         supportsParent: true,
         alignsWithParent: true,
         leftAcceptance: false,
@@ -60,12 +66,16 @@ const useStore = create<RFState>((set, get) => ({
       edges: applyEdgeChanges(changes, get().edges),
     });
   },
-  updateNodeLabel: (nodeId: string, label: string) => {
+  updateNodeLabel: (
+    nodeId: string,
+    label: string,
+    resetLeftChildren: boolean,
+    resetRightChildren: boolean
+  ) => {
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
-          const currentLabel = node.data.label;
-          if (label !== currentLabel) {
+          if (resetLeftChildren || resetRightChildren) {
             // If the label has changed, reset acceptance states
             return {
               ...node,
@@ -82,6 +92,21 @@ const useStore = create<RFState>((set, get) => ({
           return {
             ...node,
             data: { ...node.data, label },
+          };
+        }
+
+        // For each child of this parent, need to possibly reset their supportsParent and alignsWithParent states
+        if (
+          node.parentId === nodeId &&
+          ((node.data.user === "left" && resetLeftChildren) ||
+            (node.data.user === "right" && resetRightChildren))
+        ) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              alignsWithParent: !node.data.alignsWithParent,
+            },
           };
         }
 
@@ -108,7 +133,7 @@ const useStore = create<RFState>((set, get) => ({
           };
         }
 
-        if (node.parentId === nodeId) {
+        if (node.parentId === nodeId && node.data.user === side) {
           // If the iterated node is a child of the node being updated, determine if it aligns with the parent's acceptance state
           return {
             ...node,
@@ -133,6 +158,8 @@ const useStore = create<RFState>((set, get) => ({
             data: {
               ...node.data,
               supportsParent,
+              // If the node supports its parent, it aligns with the parent's acceptance state
+              alignsWithParent: !node.data.alignsWithParent,
             },
           };
         }
@@ -164,7 +191,7 @@ const useStore = create<RFState>((set, get) => ({
       type: "belief",
       data: {
         label: "",
-        parentId: null, // Initially has no parent
+        user: "both", // Indicates this belief is shared by both users
         supportsParent: true, // Initially has no parent
         alignsWithParent: true, // Initially has no parent
         leftAcceptance: false,
@@ -192,6 +219,8 @@ const useStore = create<RFState>((set, get) => ({
       type: "belief",
       data: {
         label: "",
+        // TODO need to define USER ID
+        user: user === "left" || user === "right" ? user : "both", // Indicates which user this belief belongs to
         supportsParent: Boolean(parentNode.data[`${user}Acceptance`]), // Depends on the User's acceptance state of the parent belief
         alignsWithParent: true, // Initially aligns with parent belief's acceptance state
         leftAcceptance: false,

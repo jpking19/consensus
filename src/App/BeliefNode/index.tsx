@@ -79,12 +79,33 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
 
   return (
     <>
-      <div className={"react-flow__node-belief"}>
+      <div
+        className={"react-flow__node-belief"}
+        style={{
+          opacity: data.alignsWithParent ? 1 : 0.5,
+        }}
+      >
         <TextareaAutosize
           className={"react-flow__node-input"}
           value={data.label}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-            updateNodeLabel(id, e.target.value);
+            // If the label has changed, and the node's acceptance needs to change,
+            // we reset the acceptance states and the children's support states
+            const labelChanged = e.target.value !== data.label;
+            const resetLeftChildren = labelChanged && data.leftAcceptance;
+            const resetRightChildren = labelChanged && data.rightAcceptance;
+            console.log(
+              "resetLeftChildren",
+              resetLeftChildren,
+              "resetRightChildren",
+              resetRightChildren
+            );
+            updateNodeLabel(
+              id,
+              e.target.value,
+              resetLeftChildren,
+              resetRightChildren
+            );
           }}
           style={{
             resize: "none",

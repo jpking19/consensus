@@ -2,6 +2,7 @@ import { type Node, type Edge } from "@xyflow/react";
 
 export type NodeData = {
   label: string;
+  user: "left" | "right" | "both"; // Indicates which user this belief belongs to
   parentId?: string;
   supportsParent: boolean; // Indicates if the node supports its parent belief
   alignsWithParent: boolean; // Indicates if the node aligns with its parent belief's acceptance state
