@@ -5,10 +5,11 @@ import type { NodeProps } from "@xyflow/react";
 import useStore from "../store";
 import type { BeliefNode } from "../types";
 import { AcceptanceHandle } from "../AcceptanceHandle";
+import { SupportHandle } from "../SupportHandle";
 
 import TextareaAutosize from "react-textarea-autosize";
 
-function BeliefNode({ id, data }: NodeProps<BeliefNode>) {
+function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const updateNodeLabel = useStore((state) => state.updateNodeLabel);
   const updateNodeChildrenPosition = useStore(
@@ -17,15 +18,22 @@ function BeliefNode({ id, data }: NodeProps<BeliefNode>) {
   const updateNodeUserAcceptance = useStore(
     (state) => state.updateNodeUserAcceptance
   );
+  const updateNodeParentSupport = useStore(
+    (state) => state.updateNodeParentSupport
+  );
 
   const handleNodeUserAcceptanceChange = (e: React.MouseEvent) => {
     if ((e.target as Element).classList.contains("left-acceptance-handle")) {
-      updateNodeUserAcceptance(id, "left");
+      updateNodeUserAcceptance(id, "left", !data.leftAcceptance);
     } else if (
       (e.target as Element).classList.contains("right-acceptance-handle")
     ) {
-      updateNodeUserAcceptance(id, "right");
+      updateNodeUserAcceptance(id, "right", !data.rightAcceptance);
     }
+  };
+
+  const handleNodeParentSupportChange = (e: React.MouseEvent) => {
+    updateNodeParentSupport(id, !data.supportsParent);
   };
 
   useEffect(() => {
@@ -88,11 +96,12 @@ function BeliefNode({ id, data }: NodeProps<BeliefNode>) {
           ref={textAreaRef}
         ></TextareaAutosize>
       </div>
-      <Handle
-        className="react-flow__handle"
+      <SupportHandle
         id={`target-${id}`}
-        type="target"
         position={Position.Top}
+        parentId={parentId}
+        supportsParent={data.supportsParent}
+        handleNodeParentSupportChange={handleNodeParentSupportChange}
       />
       <AcceptanceHandle
         id={`source-${id}-left`}

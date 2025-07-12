@@ -19,7 +19,12 @@ export type RFState = {
   onNodesChange: OnNodesChange<BeliefNode>;
   onEdgesChange: OnEdgesChange<BeliefEdge>;
   updateNodeLabel: (nodeId: string, label: string) => void;
-  updateNodeUserAcceptance: (nodeId: string, side: "left" | "right") => void;
+  updateNodeUserAcceptance: (
+    nodeId: string,
+    side: "left" | "right",
+    userAcceptance: boolean
+  ) => void;
+  updateNodeParentSupport: (nodeId: string, supportsParent: boolean) => void;
   updateNodeChildPosition: (nodeId: string, currentWidth: number) => void;
   addNode: (position: XYPosition) => void;
   addChildNode: (
@@ -34,7 +39,13 @@ const useStore = create<RFState>((set, get) => ({
     {
       id: "root",
       type: "belief",
-      data: { label: "" },
+      data: {
+        label: "",
+        supportsParent: true,
+        alignsWithParent: true,
+        leftAcceptance: false,
+        rightAcceptance: false,
+      },
       position: { x: 0, y: 0 },
     },
   ],
@@ -78,7 +89,11 @@ const useStore = create<RFState>((set, get) => ({
       }),
     });
   },
-  updateNodeUserAcceptance: (nodeId: string, side: "left" | "right") => {
+  updateNodeUserAcceptance: (
+    nodeId: string,
+    side: "left" | "right",
+    userAcceptance: boolean
+  ) => {
     set({
       nodes: get().nodes.map((node) => {
         console.log("updateNodeUserAcceptance", nodeId, side);
@@ -88,10 +103,40 @@ const useStore = create<RFState>((set, get) => ({
             ...node,
             data: {
               ...node.data,
-              [`${side}Acceptance`]: !node.data[`${side}Acceptance`],
+              [`${side}Acceptance`]: userAcceptance,
             },
           };
         }
+
+        if (node.parentId === nodeId) {
+          // If the iterated node is a child of the node being updated, determine if it aligns with the parent's acceptance state
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              alignsWithParent: userAcceptance == node.data.supportsParent,
+            },
+          };
+        }
+
+        return node;
+      }),
+    });
+  },
+  updateNodeParentSupport: (nodeId: string, supportsParent: boolean) => {
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id === nodeId) {
+          // it's important to create a new node here, to inform React Flow about the changes
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              supportsParent,
+            },
+          };
+        }
+
         return node;
       }),
     });
@@ -117,7 +162,14 @@ const useStore = create<RFState>((set, get) => ({
     const newNode: BeliefNode = {
       id: nanoid(),
       type: "belief",
-      data: { label: "" },
+      data: {
+        label: "",
+        parentId: null, // Initially has no parent
+        supportsParent: true, // Initially has no parent
+        alignsWithParent: true, // Initially has no parent
+        leftAcceptance: false,
+        rightAcceptance: false,
+      },
       position,
     };
 
@@ -134,10 +186,17 @@ const useStore = create<RFState>((set, get) => ({
       x: parentNode.internals.positionAbsolute.x,
       y: parentNode.internals.positionAbsolute.y,
     };
+    const user = parentHandleId?.split("-")[2];
     const newNode: BeliefNode = {
       id: nanoid(),
       type: "belief",
-      data: { label: "" },
+      data: {
+        label: "",
+        supportsParent: Boolean(parentNode.data[`${user}Acceptance`]), // Depends on the User's acceptance state of the parent belief
+        alignsWithParent: true, // Initially aligns with parent belief's acceptance state
+        leftAcceptance: false,
+        rightAcceptance: false,
+      },
       position: {
         x: position.x - parentAbsolutePosition.x,
         y: position.y - parentAbsolutePosition.y,
@@ -150,7 +209,6 @@ const useStore = create<RFState>((set, get) => ({
     });
 
     // TODO needs to account for the source of the connection
-    // Adding new node from the
     if (parentHandleId !== null) {
       const newEdge: BeliefEdge = {
         id: nanoid(),

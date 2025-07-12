@@ -3,9 +3,10 @@ import { type Node, type Edge } from "@xyflow/react";
 export type NodeData = {
   label: string;
   parentId?: string;
-  supportsParent?: boolean; // Indicates if the node supports its parent belief
-  leftAcceptance?: boolean; // Indicates if the left user accepts this belief
-  rightAcceptance?: boolean; // Indicates if the right user accepts this belief
+  supportsParent: boolean; // Indicates if the node supports its parent belief
+  alignsWithParent: boolean; // Indicates if the node aligns with its parent belief's acceptance state
+  leftAcceptance: boolean; // Indicates if the left user accepts this belief
+  rightAcceptance: boolean; // Indicates if the right user accepts this belief
   origin?: [number, number]; // This is used to place the node origin in the
 };
 
