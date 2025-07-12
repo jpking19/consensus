@@ -1,9 +1,10 @@
 import { useLayoutEffect, useEffect, useRef } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, Position, NodeToolbar } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 
 import useStore from "../store";
 import type { BeliefNode } from "../types";
+import { AcceptanceHandle } from "../AcceptanceHandle";
 
 import TextareaAutosize from "react-textarea-autosize";
 
@@ -13,6 +14,19 @@ function BeliefNode({ id, data }: NodeProps<BeliefNode>) {
   const updateNodeChildrenPosition = useStore(
     (state) => state.updateNodeChildPosition
   );
+  const updateNodeUserAcceptance = useStore(
+    (state) => state.updateNodeUserAcceptance
+  );
+
+  const handleNodeUserAcceptanceChange = (e: React.MouseEvent) => {
+    if ((e.target as Element).classList.contains("left-acceptance-handle")) {
+      updateNodeUserAcceptance(id, "left");
+    } else if (
+      (e.target as Element).classList.contains("right-acceptance-handle")
+    ) {
+      updateNodeUserAcceptance(id, "right");
+    }
+  };
 
   useEffect(() => {
     setTimeout(() => {
@@ -74,12 +88,23 @@ function BeliefNode({ id, data }: NodeProps<BeliefNode>) {
           ref={textAreaRef}
         ></TextareaAutosize>
       </div>
-      <Handle id={`source-${id}`} type="source" position={Position.Top} />
-      <Handle id={`target-${id}-left`} type="target" position={Position.Left} />
       <Handle
-        id={`target-${id}-right`}
+        className="react-flow__handle"
+        id={`target-${id}`}
         type="target"
+        position={Position.Top}
+      />
+      <AcceptanceHandle
+        id={`source-${id}-left`}
+        position={Position.Left}
+        userAcceptance={data.leftAcceptance}
+        handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
+      />
+      <AcceptanceHandle
+        id={`source-${id}-right`}
         position={Position.Right}
+        userAcceptance={data.rightAcceptance}
+        handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
       />
     </>
   );

@@ -6,16 +6,17 @@ function BeliefEdge(props: EdgeProps) {
   const { id, sourceX, sourceY, targetX, targetY, animated } = props;
 
   const [edgePath] = getBezierPath({
-    sourceX,
-    sourceY,
     targetX,
     targetY,
+    sourceX,
+    sourceY,
   });
 
   return (
     <>
       <BaseEdge
-        className="react-flow__edge animated selectable"
+        className="react-flow__edge animated selectable "
+        style={{ animationDirection: "reverse" }}
         path={edgePath}
         // {...props}
       />

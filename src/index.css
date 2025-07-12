@@ -302,7 +302,6 @@ svg.react-flow__connectionline {
   -moz-user-select: none;
   user-select: none;
   pointer-events: all;
-  transform-origin: 0 0;
   box-sizing: border-box;
   cursor: default;
 }
@@ -339,13 +338,29 @@ svg.react-flow__connectionline {
   min-height: 5px;
   width: 6px;
   height: 6px;
-  background-color: var(
-    --xy-handle-background-color,
-    var(--xy-handle-background-color-default)
-  );
+  background-color: black;
   border: 1px solid
     var(--xy-handle-border-color, var(--xy-handle-border-color-default));
   border-radius: 100%;
+}
+
+.react-flow__handle_acceptance {
+  position: absolute;
+  z-index: -1;
+  width: 32px;
+  height: 36px;
+  /* top: 50%; */
+  background-color: green;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border: 1px solid;
+  border-color: var(
+    --xy-handle-border-color,
+    var(--xy-handle-border-color-default)
+  );
+  transition: background-color 0.2s, left 0.2s, top 0.2s;
 }
 
 .react-flow__handle.connectingfrom {
@@ -629,7 +644,6 @@ svg.react-flow__connectionline {
     --xy-node-border-radius,
     var(--xy-node-border-radius-default)
   );
-  width: 150px;
   font-size: 12px;
   color: var(--xy-node-color, var(--xy-node-color-default));
   text-align: center;
