@@ -10,6 +10,17 @@ import TextareaAutosize from "react-textarea-autosize";
 function BeliefNode({ id, data }: NodeProps<BeliefNode>) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const updateNodeLabel = useStore((state) => state.updateNodeLabel);
+  const updateNodeChildrenPosition = useStore(
+    (state) => state.updateNodeChildPosition
+  );
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (textAreaRef.current) {
+        textAreaRef.current.focus({ preventScroll: true });
+      }
+    }, 1);
+  }, []);
 
   useLayoutEffect(() => {
     if (textAreaRef.current) {
@@ -22,40 +33,33 @@ function BeliefNode({ id, data }: NodeProps<BeliefNode>) {
       const font = "12px monospace"; // Adjust as needed
       context.font = font;
       const metrics = context.measureText(data.label);
-      if (metrics.width < 300) {
-        textAreaRef.current.style.width = `${metrics.width}px`; // Add some padding
+      const currentWidth = textAreaRef.current.clientWidth - 20; // 20 accounts for padding
+      let newWidth = 0;
+      if (metrics.width == 0) {
+        // If the label is empty, we use the placeholder width
+        const placeHolderMetrics = context.measureText(
+          textAreaRef.current.placeholder
+        );
+        newWidth = Math.ceil(placeHolderMetrics.width);
+      } else if (metrics.width < 300) {
+        // If the label is less than 300px, we use the label width
+        newWidth = Math.ceil(metrics.width);
       } else {
-        textAreaRef.current.style.width = "300px"; // Set a max width
+        newWidth = 300; // Set a max width
       }
+      textAreaRef.current.style.width = newWidth + "px";
+
+      // We need to update the position of child nodes when the label changes
+      const changeInWidth = currentWidth - newWidth;
+      updateNodeChildrenPosition(id, changeInWidth);
     }
   }, [data.label.length]);
 
   return (
     <>
-      <div className="react-flow__node-belief">
-        {/* <input
-          id={`label-${id}`}
-          ref={inputRef}
-          className="react-flow__node-input"
-          value={data.label}
-          onChange={(e) => updateNodeLabel(id, e.target.value)}
-        /> */}
-        {/* <textarea
-          className="react-flow__node-input"
-          value={data.label}
-          onChange={(e) => updateNodeLabel(id, e.target.value)}
-          style={{
-            height: 12,
-            minHeight: 0,
-            resize: "none",
-            // Other styling for the textarea
-          }}
-          // wrap={"soft"}
-          ref={textAreaRef}
-        /> */}
-
+      <div className={"react-flow__node-belief"}>
         <TextareaAutosize
-          className="react-flow__node-input"
+          className={"react-flow__node-input"}
           value={data.label}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
             updateNodeLabel(id, e.target.value);
@@ -64,9 +68,9 @@ function BeliefNode({ id, data }: NodeProps<BeliefNode>) {
             resize: "none",
             textAlign: "left",
           }}
-          // TODO placeholder
           // TODO autocorrect
           // TODO spellcheck
+          placeholder="What do you believe?"
           ref={textAreaRef}
         ></TextareaAutosize>
       </div>

@@ -4,6 +4,7 @@ export type NodeData = {
   label: string;
   parentId?: string;
   origin?: [number, number]; // This is used to place the node origin in the
+  selected?: boolean; // Indicates if the node is selected
 };
 
 export type EdgeData = {

@@ -19,6 +19,8 @@ export type RFState = {
   onNodesChange: OnNodesChange<BeliefNode>;
   onEdgesChange: OnEdgesChange<BeliefEdge>;
   updateNodeLabel: (nodeId: string, label: string) => void;
+  updateNodeChildPosition: (nodeId: string, currentWidth: number) => void;
+  addNode: (position: XYPosition) => void;
   addChildNode: (
     parentNode: InternalNode,
     position: XYPosition,
@@ -31,7 +33,7 @@ const useStore = create<RFState>((set, get) => ({
     {
       id: "root",
       type: "belief",
-      data: { label: "React Flow Mind Map" },
+      data: { label: "" },
       position: { x: 0, y: 0 },
     },
   ],
@@ -61,12 +63,40 @@ const useStore = create<RFState>((set, get) => ({
       }),
     });
   },
+  updateNodeChildPosition: (nodeId: string, changeInWidth: number) => {
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.parentId === nodeId) {
+          // it's important to create a new node here, to inform React Flow about the changes
+          return {
+            ...node,
+            position: {
+              x: node.position.x - changeInWidth / 2, // offset the child node position
+              y: node.position.y,
+            },
+          };
+        }
+        return node;
+      }),
+    });
+  },
+  addNode: (position: XYPosition) => {
+    const newNode: BeliefNode = {
+      id: nanoid(),
+      type: "belief",
+      data: { label: "" },
+      position,
+    };
+
+    set({
+      nodes: [...get().nodes, newNode],
+    });
+  },
   addChildNode: (
     parentNode: InternalNode,
     position: XYPosition,
     parentHandleId: string | null
   ) => {
-    // TODO need to support node without a parent
     let parentAbsolutePosition = {
       x: parentNode.internals.positionAbsolute.x,
       y: parentNode.internals.positionAbsolute.y,
@@ -74,12 +104,11 @@ const useStore = create<RFState>((set, get) => ({
     const newNode: BeliefNode = {
       id: nanoid(),
       type: "belief",
-      data: { label: "New Node" },
+      data: { label: "" },
       position: {
         x: position.x - parentAbsolutePosition.x,
         y: position.y - parentAbsolutePosition.y,
       },
-      height: 50, // Default height for the node
       parentId: parentNode.id,
     };
 

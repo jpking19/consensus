@@ -35,6 +35,7 @@ const selector = (state: RFState) => ({
   edges: state.edges,
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
+  addNode: state.addNode,
   addChildNode: state.addChildNode,
 });
 
@@ -43,9 +44,8 @@ const nodeOrigin: NodeOrigin = [0.5, 0];
 
 function Flow() {
   const store = useStoreApi();
-  const { nodes, edges, onNodesChange, onEdgesChange, addChildNode } = useStore(
-    useShallow(selector)
-  );
+  const { nodes, edges, onNodesChange, onEdgesChange, addNode, addChildNode } =
+    useStore(useShallow(selector));
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
   const connectingHandleId = useRef<string | null>(null);
@@ -91,6 +91,22 @@ function Flow() {
     [screenToFlowPosition]
   );
 
+  const onClick = useCallback(
+    (event: React.MouseEvent) => {
+      if (event.ctrlKey) {
+        const { clientX, clientY } = event;
+        const targetIsPane = (event.target as Element).classList.contains(
+          "react-flow__pane"
+        );
+        if (targetIsPane) {
+          const flowPosition = screenToFlowPosition({ x: clientX, y: clientY });
+          addNode(flowPosition);
+        }
+      }
+    },
+    [screenToFlowPosition]
+  );
+
   return (
     <ReactFlow
       nodes={nodes}
@@ -99,6 +115,7 @@ function Flow() {
       onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
+      onClick={onClick}
       onConnectStart={onConnectStart}
       onConnectEnd={onConnectEnd}
       nodeOrigin={nodeOrigin}
