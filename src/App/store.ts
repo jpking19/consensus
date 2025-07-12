@@ -79,6 +79,7 @@ const useStore = create<RFState>((set, get) => ({
         x: position.x - parentAbsolutePosition.x,
         y: position.y - parentAbsolutePosition.y,
       },
+      height: 50, // Default height for the node
       parentId: parentNode.id,
     };
 
