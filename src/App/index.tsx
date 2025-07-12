@@ -48,31 +48,48 @@ function Flow() {
   );
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
+  const connectingHandleId = useRef<string | null>(null);
 
-  const onConnectStart: OnConnectStart = useCallback((_, { nodeId }) => {
-    connectingNodeId.current = nodeId;
-  }, []);
+  const onConnectStart: OnConnectStart = useCallback(
+    (_, { nodeId, handleId }) => {
+      connectingNodeId.current = nodeId;
+      connectingHandleId.current = handleId;
+    },
+    []
+  );
 
-  const onConnectEnd: OnConnectEnd = useCallback((event) => {
-    const { nodeLookup } = store.getState();
-    const targetIsPane = (event.target as Element).classList.contains(
-      "react-flow__pane"
-    );
+  const onConnectEnd: OnConnectEnd = useCallback(
+    (event) => {
+      const { nodeLookup } = store.getState();
+      const targetIsPane = (event.target as Element).classList.contains(
+        "react-flow__pane"
+      );
 
-    if (targetIsPane && connectingNodeId.current) {
-      const parentNode = nodeLookup.get(connectingNodeId.current);
-      const { clientX, clientY } =
-        "changedTouches" in event ? event.changedTouches[0] : event;
-      const childNodePosition = screenToFlowPosition({
-        x: clientX,
-        y: clientY,
-      });
+      if (targetIsPane && connectingNodeId.current) {
+        const parentNode = nodeLookup.get(connectingNodeId.current);
+        const { clientX, clientY } =
+          "changedTouches" in event ? event.changedTouches[0] : event;
 
-      if (parentNode && childNodePosition) {
-        addChildNode(parentNode, childNodePosition);
+        // Convert the screen position to flow position relative to the parent node
+        const childNodePosition = screenToFlowPosition({
+          x: clientX,
+          y: clientY,
+        });
+
+        console.log("Adding child node at position", childNodePosition);
+
+        // TODO we need to loop through the parent node's children to find the correct position (subtract everything)
+        if (parentNode && childNodePosition) {
+          addChildNode(
+            parentNode,
+            childNodePosition,
+            connectingHandleId.current
+          );
+        }
       }
-    }
-  }, []);
+    },
+    [screenToFlowPosition]
+  );
 
   return (
     <ReactFlow

@@ -1,10 +1,11 @@
-import { BaseEdge, getStraightPath } from "@xyflow/react";
+import { BaseEdge, getBezierPath } from "@xyflow/react";
 import type { EdgeProps } from "@xyflow/react";
+import "../../index.css"; // Import the CSS for styling
 
 function BeliefEdge(props: EdgeProps) {
-  const { id, sourceX, sourceY, targetX, targetY } = props;
+  const { id, sourceX, sourceY, targetX, targetY, animated } = props;
 
-  const [edgePath] = getStraightPath({
+  const [edgePath] = getBezierPath({
     sourceX,
     sourceY,
     targetX,
@@ -13,7 +14,11 @@ function BeliefEdge(props: EdgeProps) {
 
   return (
     <>
-      <BaseEdge path={edgePath} {...props} />
+      <BaseEdge
+        className="react-flow__edge animated selectable"
+        path={edgePath}
+        // {...props}
+      />
     </>
   );
 }

@@ -1,5 +1,4 @@
 import {
-  type Edge,
   type EdgeChange,
   type NodeChange,
   type OnNodesChange,
@@ -12,15 +11,19 @@ import {
 import { create } from "zustand";
 import { nanoid } from "nanoid/non-secure";
 
-import type { BeliefNode } from "./types";
+import type { BeliefNode, BeliefEdge } from "./types";
 
 export type RFState = {
   nodes: BeliefNode[];
-  edges: Edge[];
+  edges: BeliefEdge[];
   onNodesChange: OnNodesChange<BeliefNode>;
-  onEdgesChange: OnEdgesChange;
+  onEdgesChange: OnEdgesChange<BeliefEdge>;
   updateNodeLabel: (nodeId: string, label: string) => void;
-  addChildNode: (parentNode: InternalNode, position: XYPosition) => void;
+  addChildNode: (
+    parentNode: InternalNode,
+    position: XYPosition,
+    parentHandleId: string | null
+  ) => void;
 };
 
 const useStore = create<RFState>((set, get) => ({
@@ -38,7 +41,7 @@ const useStore = create<RFState>((set, get) => ({
       nodes: applyNodeChanges(changes, get().nodes),
     });
   },
-  onEdgesChange: (changes: EdgeChange[]) => {
+  onEdgesChange: (changes: EdgeChange<BeliefEdge>[]) => {
     set({
       edges: applyEdgeChanges(changes, get().edges),
     });
@@ -46,14 +49,6 @@ const useStore = create<RFState>((set, get) => ({
   updateNodeLabel: (nodeId: string, label: string) => {
     set({
       nodes: get().nodes.map((node) => {
-        console.log(
-          "Updating node",
-          node.id,
-          "compared to id",
-          nodeId,
-          "to label",
-          label
-        );
         if (node.id === nodeId) {
           // it's important to create a new node here, to inform React Flow about the changes
           return {
@@ -66,27 +61,47 @@ const useStore = create<RFState>((set, get) => ({
       }),
     });
   },
-  addChildNode: (parentNode: InternalNode, position: XYPosition) => {
+  addChildNode: (
+    parentNode: InternalNode,
+    position: XYPosition,
+    parentHandleId: string | null
+  ) => {
     // TODO need to support node without a parent
+    let parentAbsolutePosition = {
+      x: parentNode.internals.positionAbsolute.x,
+      y: parentNode.internals.positionAbsolute.y,
+    };
     const newNode: BeliefNode = {
       id: nanoid(),
       type: "belief",
       data: { label: "New Node" },
-      position,
+      position: {
+        x: position.x - parentAbsolutePosition.x,
+        y: position.y - parentAbsolutePosition.y,
+      },
       parentId: parentNode.id,
-    };
-
-    // TODO needs to account for the source of the connection
-    const newEdge = {
-      id: nanoid(),
-      source: parentNode.id,
-      target: newNode.id,
     };
 
     set({
       nodes: [...get().nodes, newNode],
-      edges: [...get().edges, newEdge],
     });
+
+    // TODO needs to account for the source of the connection
+    // Adding new node from the
+    if (parentHandleId !== null) {
+      const newEdge: BeliefEdge = {
+        id: nanoid(),
+        type: "beliefEdge",
+        source: newNode.id,
+        target: parentNode.id,
+        targetHandle: parentHandleId,
+        animated: true,
+      };
+
+      set({
+        edges: [...get().edges, newEdge],
+      });
+    }
   },
 }));
 
