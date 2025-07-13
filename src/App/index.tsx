@@ -57,11 +57,13 @@ function Flow() {
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
   const connectingHandleId = useRef<string | null>(null);
+  const connectingUser = useRef<"left" | "right" | "both" | null>(null);
 
   const onConnectStart: OnConnectStart = useCallback(
     (_, { nodeId, handleId }) => {
       connectingNodeId.current = nodeId;
       connectingHandleId.current = handleId;
+      connectingUser.current = null; // Reset the connecting user
     },
     []
   );
@@ -101,26 +103,39 @@ function Flow() {
         } else if (
           connectingHandleId.current == `target-${connectingNodeId.current}`
         ) {
-          const childNode = nodeLookup.get(connectingNodeId.current);
-          const { clientX, clientY } =
-            "changedTouches" in event ? event.changedTouches[0] : event;
+          // Check if user has pressed left or right arrow key
+          if (connectingUser.current != null) {
+            const childNode = nodeLookup.get(connectingNodeId.current);
+            const { clientX, clientY } =
+              "changedTouches" in event ? event.changedTouches[0] : event;
 
-          // Convert the screen position to flow position relative to the child node
-          const parentNodePosition = screenToFlowPosition({
-            x: clientX,
-            y: clientY,
-          });
+            // Convert the screen position to flow position relative to the child node
+            const parentNodePosition = screenToFlowPosition({
+              x: clientX,
+              y: clientY,
+            });
 
-          console.log("Adding parent node at position", parentNodePosition);
-          const user = "left"; // TODO this needs to check pressed key
-          if (childNode && parentNodePosition) {
-            addParentNode(childNode, parentNodePosition, user);
+            console.log("Adding parent node at position", parentNodePosition);
+            if (childNode && parentNodePosition) {
+              addParentNode(
+                childNode,
+                parentNodePosition,
+                connectingUser.current
+              );
+            }
           }
         }
       }
     },
     [screenToFlowPosition]
   );
+
+  const onKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      connectingUser.current = event.key === "ArrowLeft" ? "left" : "right";
+      // TODO can add a visual indicator for the user
+    }
+  }, []);
 
   const onClick = useCallback(
     (event: React.MouseEvent) => {
@@ -147,6 +162,7 @@ function Flow() {
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       onClick={onClick}
+      onKeyDown={onKeyDown}
       onConnectStart={onConnectStart}
       onConnectEnd={onConnectEnd}
       nodeOrigin={nodeOrigin}
