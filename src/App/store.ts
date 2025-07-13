@@ -13,8 +13,19 @@ import { nanoid } from "nanoid/non-secure";
 
 import type { BeliefNode, BeliefEdge } from "./types";
 
+class TreeNode {
+  public beliefNode: BeliefNode | null = null;
+  public parent: TreeNode | null;
+
+  constructor(beliefNode: BeliefNode, parent: TreeNode | null) {
+    this.beliefNode = beliefNode;
+    this.parent = parent;
+  }
+}
+
 export type RFState = {
   nodes: BeliefNode[];
+  // nodeTrees: TreeNode[];
   edges: BeliefEdge[];
   onNodesChange: OnNodesChange<BeliefNode>;
   onEdgesChange: OnEdgesChange<BeliefEdge>;
@@ -37,6 +48,11 @@ export type RFState = {
     position: XYPosition,
     parentHandleId: string | null
   ) => void;
+  addParentNode: (
+    childNode: InternalNode,
+    position: XYPosition,
+    user: string
+  ) => void;
 };
 
 const useStore = create<RFState>((set, get) => ({
@@ -55,6 +71,7 @@ const useStore = create<RFState>((set, get) => ({
       position: { x: 0, y: 0 },
     },
   ],
+  // nodeTrees: [new TreeNode(, null)],
   edges: [],
   onNodesChange: (changes: NodeChange<BeliefNode>[]) => {
     set({
@@ -245,13 +262,102 @@ const useStore = create<RFState>((set, get) => ({
         target: newNode.id,
         source: parentNode.id,
         sourceHandle: parentHandleId,
-        animated: true,
+        animated: true, // TODO do we need this?
       };
 
       set({
         edges: [...get().edges, newEdge],
       });
     }
+  },
+  addParentNode: (
+    childNode: InternalNode,
+    position: XYPosition,
+    user: string
+  ) => {
+    // Create new parent node based on the child node's position
+    const newNode: BeliefNode = {
+      id: nanoid(),
+      type: "belief",
+      data: {
+        label: "",
+        user: user === "left" || user === "right" ? user : "both", // Indicates which user this belief belongs to
+        supportsParent: true, // Initially has no parent
+        alignsWithParent: true, // Initially has no parent
+        // TODO not sure I want to force acceptance here. But I suppose yes, since we are coming from supporting belief
+        leftAcceptance: user === "left" ? true : false,
+        rightAcceptance: user === "right" ? true : false,
+      },
+      position: {
+        x: position.x,
+        y: position.y,
+      },
+      origin: user === "left" ? [0, 0.5] : [1, 0.5], // This is used to place the node origin in the center of a node
+    };
+
+    // TODO can avoid sort here by adding at front of array
+    set({
+      nodes: [...get().nodes, newNode],
+    });
+
+    // Update the child node to have this new node as its parent,
+    // and update its position to be relative to the new parent node
+    // TODO need to find correct position for child node, maybe based on parent height?
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id === childNode.id) {
+          return {
+            ...node,
+            parentId: newNode.id,
+            position: {
+              x: node.position.x - newNode.position.x + 10, // TODO something is off with these positions
+              y: node.position.y - newNode.position.y + 21, // TODO something is off with these positions
+            },
+          };
+        }
+        return node;
+      }),
+    });
+
+    // TODO define this outside, we're going to use it in multiple places
+    // Recursively find all child nodes, and add them to the sorted nodes
+    const addChildren = (parentId: string) => {
+      get().nodes.forEach((child) => {
+        if (child.parentId === parentId) {
+          sortedNodes.push(child);
+          addChildren(child.id);
+        }
+      });
+    };
+
+    // Sort nodes to ensure the new parent node is added after the child node
+    // This is important for React Flow to render the edges correctly
+    let sortedNodes: BeliefNode[] = [];
+    get().nodes.forEach((node) => {
+      if (node.parentId == null) {
+        sortedNodes.push(node);
+        addChildren(node.id);
+      }
+    });
+
+    set({
+      nodes: [...sortedNodes],
+    });
+
+    // Create edge from the new parent node to the child node
+    const parentHandleId = `source-${newNode.id}-${user}`; // This is the handle ID for the parent node to connect to the child node
+    const newEdge: BeliefEdge = {
+      id: nanoid(),
+      type: "beliefEdge",
+      target: childNode.id,
+      source: newNode.id,
+      sourceHandle: parentHandleId,
+      animated: true, // TODO do we need this?
+    };
+
+    set({
+      edges: [...get().edges, newEdge],
+    });
   },
 }));
 

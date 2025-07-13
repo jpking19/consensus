@@ -37,6 +37,7 @@ const selector = (state: RFState) => ({
   onEdgesChange: state.onEdgesChange,
   addNode: state.addNode,
   addChildNode: state.addChildNode,
+  addParentNode: state.addParentNode,
 });
 
 // this places the node origin in the center of a node
@@ -44,8 +45,15 @@ const nodeOrigin: NodeOrigin = [0.5, 0];
 
 function Flow() {
   const store = useStoreApi();
-  const { nodes, edges, onNodesChange, onEdgesChange, addNode, addChildNode } =
-    useStore(useShallow(selector));
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    addNode,
+    addChildNode,
+    addParentNode,
+  } = useStore(useShallow(selector));
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
   const connectingHandleId = useRef<string | null>(null);
@@ -66,25 +74,48 @@ function Flow() {
       );
 
       if (targetIsPane && connectingNodeId.current) {
-        const parentNode = nodeLookup.get(connectingNodeId.current);
-        const { clientX, clientY } =
-          "changedTouches" in event ? event.changedTouches[0] : event;
+        if (
+          connectingHandleId.current ==
+            `source-${connectingNodeId.current}-left` ||
+          connectingHandleId.current ==
+            `source-${connectingNodeId.current}-right`
+        ) {
+          const parentNode = nodeLookup.get(connectingNodeId.current);
+          const { clientX, clientY } =
+            "changedTouches" in event ? event.changedTouches[0] : event;
 
-        // Convert the screen position to flow position relative to the parent node
-        const childNodePosition = screenToFlowPosition({
-          x: clientX,
-          y: clientY,
-        });
+          // Convert the screen position to flow position relative to the parent node
+          const childNodePosition = screenToFlowPosition({
+            x: clientX,
+            y: clientY,
+          });
 
-        console.log("Adding child node at position", childNodePosition);
+          console.log("Adding child node at position", childNodePosition);
+          if (parentNode && childNodePosition) {
+            addChildNode(
+              parentNode,
+              childNodePosition,
+              connectingHandleId.current
+            );
+          }
+        } else if (
+          connectingHandleId.current == `target-${connectingNodeId.current}`
+        ) {
+          const childNode = nodeLookup.get(connectingNodeId.current);
+          const { clientX, clientY } =
+            "changedTouches" in event ? event.changedTouches[0] : event;
 
-        // TODO we need to loop through the parent node's children to find the correct position (subtract everything)
-        if (parentNode && childNodePosition) {
-          addChildNode(
-            parentNode,
-            childNodePosition,
-            connectingHandleId.current
-          );
+          // Convert the screen position to flow position relative to the child node
+          const parentNodePosition = screenToFlowPosition({
+            x: clientX,
+            y: clientY,
+          });
+
+          console.log("Adding parent node at position", parentNodePosition);
+          const user = "left"; // TODO this needs to check pressed key
+          if (childNode && parentNodePosition) {
+            addParentNode(childNode, parentNodePosition, user);
+          }
         }
       }
     },

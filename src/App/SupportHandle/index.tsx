@@ -18,7 +18,8 @@ export function SupportHandle({
       }}
       style={{
         background: supportsParent ? "green" : "red",
-        visibility: parentId ? "visible" : "hidden",
+        // TODO do we want to hide this?
+        // visibility: parentId ? "visible" : "hidden",
       }}
     />
   );

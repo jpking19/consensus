@@ -94,12 +94,6 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
             const labelChanged = e.target.value !== data.label;
             const resetLeftChildren = labelChanged && data.leftAcceptance;
             const resetRightChildren = labelChanged && data.rightAcceptance;
-            console.log(
-              "resetLeftChildren",
-              resetLeftChildren,
-              "resetRightChildren",
-              resetRightChildren
-            );
             updateNodeLabel(
               id,
               e.target.value,
