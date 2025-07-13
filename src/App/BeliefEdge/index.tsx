@@ -2,7 +2,6 @@ import { BaseEdge, getBezierPath, useStore } from "@xyflow/react";
 import type { EdgeProps } from "@xyflow/react";
 import "../../index.css"; // Import the CSS for styling
 import type { BeliefEdge } from "../types";
-// import { DataEdge } from "@/components/data-edge";
 import { useMemo } from "react";
 
 function BeliefEdge({
@@ -32,7 +31,6 @@ function BeliefEdge({
   const consensus_edge_class = useMemo(() => {
     if (nodeData) {
       if (!nodeData.alignsWithParent) {
-        // TODO aligns not getting updated properly
         return "consensus_unaligned";
       } else if (nodeData.alignsWithParent) {
         if (nodeData.leftAcceptance && nodeData.rightAcceptance) {

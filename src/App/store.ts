@@ -13,19 +13,8 @@ import { nanoid } from "nanoid/non-secure";
 
 import type { BeliefNode, BeliefEdge } from "./types";
 
-class TreeNode {
-  public beliefNode: BeliefNode | null = null;
-  public parent: TreeNode | null;
-
-  constructor(beliefNode: BeliefNode, parent: TreeNode | null) {
-    this.beliefNode = beliefNode;
-    this.parent = parent;
-  }
-}
-
 export type RFState = {
   nodes: BeliefNode[];
-  // nodeTrees: TreeNode[];
   edges: BeliefEdge[];
   onNodesChange: OnNodesChange<BeliefNode>;
   onEdgesChange: OnEdgesChange<BeliefEdge>;
@@ -48,10 +37,10 @@ export type RFState = {
     position: XYPosition,
     parentHandleId: string | null
   ) => void;
-  addParentNode: (
-    childNode: InternalNode,
-    position: XYPosition,
-    user: string
+  addParentNode: (childNode: InternalNode, position: XYPosition) => void;
+  updateNodeConnectingUser: (
+    nodeId: string,
+    user: "left" | "right" | "both" | null
   ) => void;
 };
 
@@ -270,11 +259,15 @@ const useStore = create<RFState>((set, get) => ({
       });
     }
   },
-  addParentNode: (
-    childNode: InternalNode,
-    position: XYPosition,
-    user: string
-  ) => {
+  addParentNode: (childNode: InternalNode, position: XYPosition) => {
+    // Get the user from the child node (this is the user that asserting new belief)
+    const user = (childNode.data as BeliefNode["data"]).connectingUser;
+    if (!user) {
+      console.error("No user specified for adding parent node");
+      // TODO probably show some stronger visual feedback here
+      return;
+    }
+
     // Create new parent node based on the child node's position
     const newNode: BeliefNode = {
       id: nanoid(),
@@ -288,11 +281,12 @@ const useStore = create<RFState>((set, get) => ({
         leftAcceptance: user === "left" ? true : false,
         rightAcceptance: user === "right" ? true : false,
       },
+      // TODO should account for whether user is left or right - and position accordingly
       position: {
         x: position.x,
         y: position.y,
       },
-      origin: user === "left" ? [0, 0.5] : [1, 0.5], // This is used to place the node origin in the center of a node
+      // origin: user === "left" ? [0, 0.5] : [1, 0.5], // This is used to place the node origin in the center of a node
     };
 
     // TODO can avoid sort here by adding at front of array
@@ -359,6 +353,25 @@ const useStore = create<RFState>((set, get) => ({
       edges: [...get().edges, newEdge],
     });
   },
+  updateNodeConnectingUser: (
+    nodeId: string,
+    user: "left" | "right" | "both" | null
+  ) =>
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id === nodeId) {
+          // it's important to create a new node here, to inform React Flow about the changes
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              connectingUser: user,
+            },
+          };
+        }
+        return node;
+      }),
+    }),
 }));
 
 export default useStore;
