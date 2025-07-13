@@ -70,3 +70,7 @@ export default tseslint.config({
 
 ├── reactflow@11.11.4
 └── zustand@5.0.6
+
+npx shadcn@latest add https://ui.reactflow.dev/data-edge
+npm install tailwindcss @tailwindcss/vite
+npm install -D tailwindcss postcss autoprefixer

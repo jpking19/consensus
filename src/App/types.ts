@@ -11,18 +11,8 @@ export type NodeData = {
   origin?: [number, number]; // This is used to place the node origin in the
 };
 
-export type EdgeData = {
-  // source: string; // Source is the Parent belief node
-  // target: string; // Target is the Child belief node
-  // type: "beliefEdge";
-  // origin?: [number, number];
-  // TODO do we need any of these?
-  // animated: boolean; // Indicates if the edge is animated
-  supportsParent: boolean; // Indicates if the edge supports the parent belief
-  alignsWithParent: boolean; // Indicates if the edge aligns with the parent belief's acceptance state
-  leftAcceptance: boolean; // Indicates if the left user accepts this belief
-  rightAcceptance: boolean; // Indicates if the right user accepts this belief
-};
+// Currently, all data needed by Edges is contained in the NodeData.
+export type EdgeData = {};
 
 export type BeliefNode = Node<NodeData, "belief">;
 export type BeliefEdge = Edge<EdgeData, "beliefEdge">;

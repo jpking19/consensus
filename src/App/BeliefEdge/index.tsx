@@ -1,10 +1,14 @@
-import { BaseEdge, getBezierPath } from "@xyflow/react";
+import { BaseEdge, getBezierPath, useStore } from "@xyflow/react";
 import type { EdgeProps } from "@xyflow/react";
 import "../../index.css"; // Import the CSS for styling
 import type { BeliefEdge } from "../types";
+// import { DataEdge } from "@/components/data-edge";
+import { useMemo } from "react";
 
 function BeliefEdge({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
@@ -12,9 +16,8 @@ function BeliefEdge({
   sourcePosition,
   targetPosition,
   animated,
-  data,
 }: EdgeProps<BeliefEdge>) {
-  // const { id, sourceX, sourceY, targetX, targetY, animated, data } = props;
+  const nodeData = useStore((state) => state.nodeLookup.get(target)?.data);
 
   const [edgePath] = getBezierPath({
     sourceX,
@@ -25,26 +28,30 @@ function BeliefEdge({
     targetPosition: targetPosition,
   });
 
-  let consensus_edge_class = "";
-  if (!data?.alignsWithParent) {
-    // TODO aligns not getting updated properly
-    consensus_edge_class = "consensus_unaligned";
-  } else if (data?.alignsWithParent) {
-    if (data?.leftAcceptance && data?.rightAcceptance) {
-      consensus_edge_class = "consensus";
-    } else if (data?.leftAcceptance || data?.rightAcceptance) {
-      consensus_edge_class = "consensus_possible";
-    } else {
-      consensus_edge_class = "consensus_none";
+  // Use target node's data to get values for determing edge style
+  const consensus_edge_class = useMemo(() => {
+    if (nodeData) {
+      if (!nodeData.alignsWithParent) {
+        // TODO aligns not getting updated properly
+        return "consensus_unaligned";
+      } else if (nodeData.alignsWithParent) {
+        if (nodeData.leftAcceptance && nodeData.rightAcceptance) {
+          return "consensus";
+        } else if (nodeData.leftAcceptance || nodeData.rightAcceptance) {
+          return "consensus_possible";
+        } else {
+          return "consensus_none";
+        }
+      }
     }
-  }
 
-  console.log("BeliefEdge data:", data);
-  console.log("BeliefEdge consensus_edge_class:", consensus_edge_class);
+    return "";
+  }, [nodeData]);
 
   return (
     <>
       <BaseEdge
+        id={id}
         className={`react-flow__edge selectable ${consensus_edge_class}`}
         style={{
           // animation: "dashdraw 1s linear infinite",
