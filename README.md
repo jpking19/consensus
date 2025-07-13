@@ -56,3 +56,17 @@ export default tseslint.config({
   },
 });
 ```
+
+├── @emotion/react@11.14.0
+├── @emotion/styled@11.14.1
+├── @fontsource/roboto@5.2.6
+├── @mui/material@7.2.0
+├── @xyflow/react@12.8.1
+├── classcat@5.0.5
+├── nanoid@5.1.5
+├── react-textarea-autosize@8.5.9
+
+<!-- ├── react-zoom-pan-pinch@3.7.0 -->
+
+├── reactflow@11.11.4
+└── zustand@5.0.6

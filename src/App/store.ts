@@ -147,6 +147,22 @@ const useStore = create<RFState>((set, get) => ({
         return node;
       }),
     });
+    set({
+      edges: get().edges.map((edge) => {
+        console.log("updateNodeUserAcceptance edge", edge.target, nodeId);
+        if (edge.target === nodeId) {
+          // Update the edge to reflect the parent's acceptance state
+          return {
+            ...edge,
+            data: {
+              ...edge.data,
+              [`${side}Acceptance`]: userAcceptance,
+            },
+          };
+        }
+        return edge;
+      }),
+    });
   },
   updateNodeParentSupport: (nodeId: string, supportsParent: boolean) => {
     set({
@@ -219,7 +235,7 @@ const useStore = create<RFState>((set, get) => ({
       type: "belief",
       data: {
         label: "",
-        // TODO need to define USER ID
+        // TODO need to define USER ID globally
         user: user === "left" || user === "right" ? user : "both", // Indicates which user this belief belongs to
         supportsParent: Boolean(parentNode.data[`${user}Acceptance`]), // Depends on the User's acceptance state of the parent belief
         alignsWithParent: true, // Initially aligns with parent belief's acceptance state
@@ -246,6 +262,13 @@ const useStore = create<RFState>((set, get) => ({
         source: parentNode.id,
         sourceHandle: parentHandleId,
         animated: true,
+        data: {
+          // TODO probably needs an update
+          supportsParent: newNode.data.supportsParent,
+          alignsWithParent: newNode.data.alignsWithParent,
+          leftAcceptance: newNode.data.leftAcceptance,
+          rightAcceptance: newNode.data.rightAcceptance,
+        },
       };
 
       set({

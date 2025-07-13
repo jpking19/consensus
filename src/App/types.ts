@@ -12,11 +12,16 @@ export type NodeData = {
 };
 
 export type EdgeData = {
-  id: string;
-  source: string;
-  target: string;
-  type: "beliefEdge";
-  origin?: [number, number];
+  // source: string; // Source is the Parent belief node
+  // target: string; // Target is the Child belief node
+  // type: "beliefEdge";
+  // origin?: [number, number];
+  // TODO do we need any of these?
+  // animated: boolean; // Indicates if the edge is animated
+  supportsParent: boolean; // Indicates if the edge supports the parent belief
+  alignsWithParent: boolean; // Indicates if the edge aligns with the parent belief's acceptance state
+  leftAcceptance: boolean; // Indicates if the left user accepts this belief
+  rightAcceptance: boolean; // Indicates if the right user accepts this belief
 };
 
 export type BeliefNode = Node<NodeData, "belief">;
