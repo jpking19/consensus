@@ -1,9 +1,8 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
   MiniMap,
-  ConnectionLineType,
   type NodeOrigin,
   type OnConnectEnd,
   type OnConnectStart,
@@ -11,9 +10,12 @@ import {
   useStoreApi,
   Controls,
   Panel,
-  type InternalNode,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import { useShallow } from "zustand/react/shallow";
+import fs from "vite-plugin-fs/browser";
+
+import path from "path";
 
 import useStore, { type RFState } from "./store";
 import BeliefNode from "./BeliefNode";
@@ -31,6 +33,8 @@ const edgeTypes = {
 const selector = (state: RFState) => ({
   nodes: state.nodes,
   edges: state.edges,
+  setNodes: state.setNodes,
+  setEdges: state.setEdges,
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
   addNode: state.addNode,
@@ -42,11 +46,18 @@ const selector = (state: RFState) => ({
 // this places the node origin in the center of a node
 const nodeOrigin: NodeOrigin = [0.5, 0];
 
+// TODO proper flow key management
+const flowKey = "consensus-flow";
+// const conversationsDir = path.join(__dirname, "..", "conversations");
+const flowFilePath = "./flows/flow.json";
+
 function Flow() {
   const store = useStoreApi();
   const {
     nodes,
     edges,
+    setNodes,
+    setEdges,
     onNodesChange,
     onEdgesChange,
     addNode,
@@ -57,7 +68,7 @@ function Flow() {
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
   const connectingHandleId = useRef<string | null>(null);
-  // const connectingUser = useRef<"left" | "right" | "both" | null>(null);
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
   const onConnectStart: OnConnectStart = useCallback(
     (_, { nodeId, handleId }) => {
@@ -157,6 +168,42 @@ function Flow() {
     [screenToFlowPosition]
   );
 
+  const onSave = useCallback(() => {
+    if (rfInstance) {
+      const flow = rfInstance.toObject();
+      // Save to localStorage for browser persistence
+      localStorage.setItem(flowKey, JSON.stringify(flow));
+      // Also save to file in conversations directory
+      try {
+        fs.writeFile(flowFilePath, JSON.stringify(flow, null, 2));
+      } catch (err) {
+        console.error("Error saving flow to file:", err);
+      }
+    }
+  }, [rfInstance]);
+
+  const onRestore = useCallback(() => {
+    const restoreFlow = async () => {
+      let flow = null;
+      // Try to load from file first
+      try {
+        const fileContent = await fs.readFile(flowFilePath);
+        flow = JSON.parse(fileContent);
+      } catch (err) {
+        console.error("Error loading flow from file:", err);
+      }
+      // Fallback to localStorage if file not found
+      if (flow) {
+        setNodes(flow.nodes || []);
+        setEdges(flow.edges || []);
+        // TODO restore viewport
+        // setViewport({ x, y, zoom });
+      }
+    };
+
+    restoreFlow();
+  }, [setNodes]);
+
   return (
     <ReactFlow
       nodes={nodes}
@@ -166,6 +213,7 @@ function Flow() {
       connectionLineComponent={SupportConnection}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
+      onInit={setRfInstance}
       onClick={onClick}
       onKeyDown={onKeyDown}
       onConnectStart={onConnectStart}
@@ -176,6 +224,14 @@ function Flow() {
       fitView
     >
       <Background />
+      <Panel position="top-right">
+        <button className="xy-theme__button" onClick={onSave}>
+          save
+        </button>
+        <button className="xy-theme__button" onClick={onRestore}>
+          restore
+        </button>
+      </Panel>
       <Controls />
       <MiniMap />
     </ReactFlow>

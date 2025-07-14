@@ -17,6 +17,8 @@ import type { BeliefNode, BeliefEdge } from "./types";
 export type RFState = {
   nodes: BeliefNode[];
   edges: BeliefEdge[];
+  setNodes: (nodes: BeliefNode[]) => void;
+  setEdges: (edges: BeliefEdge[]) => void;
   onNodesChange: OnNodesChange<BeliefNode>;
   onEdgesChange: OnEdgesChange<BeliefEdge>;
   updateNodeLabel: (
@@ -61,8 +63,13 @@ const useStore = create<RFState>((set, get) => ({
       position: { x: 0, y: 0 },
     },
   ],
-  // nodeTrees: [new TreeNode(, null)],
   edges: [],
+  setNodes: (nodes: BeliefNode[]) => {
+    set({ nodes });
+  },
+  setEdges: (edges: BeliefEdge[]) => {
+    set({ edges });
+  },
   onNodesChange: (changes: NodeChange<BeliefNode>[]) => {
     set({
       nodes: applyNodeChanges(changes, get().nodes),
