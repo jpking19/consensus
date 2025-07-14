@@ -4,6 +4,8 @@ export function AcceptanceHandle({
   id,
   position,
   userAcceptance,
+  alignsWithParent,
+  nodeLabel,
   handleNodeUserAcceptanceChange,
 }) {
   return (
@@ -17,6 +19,10 @@ export function AcceptanceHandle({
       }}
       style={{
         background: userAcceptance ? "green" : "red",
+        visibility: alignsWithParent ? "visible" : "hidden",
+        left: position === Position.Left && nodeLabel == "" ? "20px" : "",
+        right: position === Position.Right && nodeLabel == "" ? "20px" : "",
+        zIndex: -1,
       }}
     />
   );

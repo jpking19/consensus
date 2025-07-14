@@ -14,8 +14,6 @@ export default ({ fromX, fromY, toX, toY }) => {
   // TODO change circle to be fake node (temp border) (should be red if not connectingUser)
   // TODO should change sides based on connectingUser
 
-  console.log("connection x y ", fromX, fromY, toX, toY);
-
   if (fromHandle?.type == "target") {
     // Connection for creating a new parent needs to account for user being selected
     const [edgePath] = getBezierPath({
@@ -54,7 +52,6 @@ export default ({ fromX, fromY, toX, toY }) => {
     );
   } else if (fromHandle?.type == "source") {
     // Connection for creating a new child belief needs to account for source Handle
-
     const [edgePath] = getBezierPath({
       // TODO this is half the width of the AcceptanceHandle
       sourceX: fromHandle.position == Position.Left ? fromX - 17 : fromX + 17,

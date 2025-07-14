@@ -15,9 +15,6 @@ import {
 } from "@xyflow/react";
 import { useShallow } from "zustand/react/shallow";
 
-// we have to import the React Flow styles for it to work
-import "@xyflow/react/dist/style.css";
-
 import useStore, { type RFState } from "./store";
 import BeliefNode from "./BeliefNode";
 import BeliefEdge from "./BeliefEdge";
@@ -131,14 +128,15 @@ function Flow() {
   );
 
   const onKeyDown = useCallback((event: React.KeyboardEvent) => {
-    console.log("Key down event:", event.key);
-    if (event.key === "ArrowLeft" && connectingNodeId.current) {
-      console.log("Left arrow pressed");
-      event.stopPropagation(); // Stop propagation to prevent default behavior
+    if (
+      (event.key === "ArrowLeft" || event.key === "a") &&
+      connectingNodeId.current
+    ) {
       updateNodeConnectingUser(connectingNodeId.current, "left");
-    } else if (event.key === "ArrowRight" && connectingNodeId.current) {
-      console.log("Right arrow pressed");
-      event.preventDefault(); // Prevent default behavior to avoid scrolling
+    } else if (
+      (event.key === "ArrowRight" || event.key === "d") &&
+      connectingNodeId.current
+    ) {
       updateNodeConnectingUser(connectingNodeId.current, "right");
     }
   }, []);
@@ -174,6 +172,7 @@ function Flow() {
       onConnectEnd={onConnectEnd}
       nodeOrigin={nodeOrigin}
       colorMode="dark"
+      disableKeyboardA11y
       fitView
     >
       <Background />

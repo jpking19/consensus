@@ -11,6 +11,7 @@ import TextareaAutosize from "react-textarea-autosize";
 
 function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const editingRef = useRef<Boolean>(true);
   const updateNodeLabel = useStore((state) => state.updateNodeLabel);
   const updateNodeChildrenPosition = useStore(
     (state) => state.updateNodeChildPosition
@@ -57,11 +58,13 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
       const metrics = context.measureText(data.label);
       const currentWidth = textAreaRef.current.clientWidth - 20; // 20 accounts for padding
       let newWidth = 0;
-      if (metrics.width == 0) {
-        // If the label is empty, we use the placeholder width
-        const placeHolderMetrics = context.measureText(
-          textAreaRef.current.placeholder
-        );
+
+      const placeHolderMetrics = context.measureText(
+        textAreaRef.current.placeholder
+      );
+      const placeholderWidth = Math.ceil(placeHolderMetrics.width);
+      if (metrics.width < placeholderWidth) {
+        // If the label is empty/smaller than placeholder, we use the placeholder width
         newWidth = Math.ceil(placeHolderMetrics.width);
       } else if (metrics.width < 300) {
         // If the label is less than 300px, we use the label width
@@ -76,6 +79,13 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
       updateNodeChildrenPosition(id, changeInWidth);
     }
   }, [data.label.length]);
+
+  useEffect(() => {
+    // When the node is selected, we focus the text area
+    if (textAreaRef.current) {
+      textAreaRef.current.focus({ preventScroll: true });
+    }
+  }, [id]);
 
   return (
     <>
@@ -109,12 +119,15 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
           // TODO spellcheck
           placeholder="What do you believe?"
           ref={textAreaRef}
+          readOnly={!data.alignsWithParent}
         ></TextareaAutosize>
       </div>
       <SupportHandle
         id={`target-${id}`}
         position={Position.Top}
         parentId={parentId}
+        alignsWithParent={data.alignsWithParent}
+        nodeLabel={data.label}
         supportsParent={data.supportsParent}
         handleNodeParentSupportChange={handleNodeParentSupportChange}
       />
@@ -122,12 +135,16 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         id={`source-${id}-left`}
         position={Position.Left}
         userAcceptance={data.leftAcceptance}
+        alignsWithParent={data.alignsWithParent}
+        nodeLabel={data.label}
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
       />
       <AcceptanceHandle
         id={`source-${id}-right`}
         position={Position.Right}
         userAcceptance={data.rightAcceptance}
+        alignsWithParent={data.alignsWithParent}
+        nodeLabel={data.label}
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
       />
     </>

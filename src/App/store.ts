@@ -5,6 +5,7 @@ import {
   type OnEdgesChange,
   applyNodeChanges,
   applyEdgeChanges,
+  getNodesBounds,
   type XYPosition,
   type InternalNode,
 } from "@xyflow/react";
@@ -127,7 +128,6 @@ const useStore = create<RFState>((set, get) => ({
   ) => {
     set({
       nodes: get().nodes.map((node) => {
-        console.log("updateNodeUserAcceptance", nodeId, side);
         if (node.id === nodeId) {
           // it's important to create a new node here, to inform React Flow about the changes
           return {
@@ -281,12 +281,10 @@ const useStore = create<RFState>((set, get) => ({
         leftAcceptance: user === "left" ? true : false,
         rightAcceptance: user === "right" ? true : false,
       },
-      // TODO should account for whether user is left or right - and position accordingly
       position: {
         x: position.x,
         y: position.y,
       },
-      // origin: user === "left" ? [0, 0.5] : [1, 0.5], // This is used to place the node origin in the center of a node
     };
 
     // TODO can avoid sort here by adding at front of array
@@ -296,16 +294,19 @@ const useStore = create<RFState>((set, get) => ({
 
     // Update the child node to have this new node as its parent,
     // and update its position to be relative to the new parent node
-    // TODO need to find correct position for child node, maybe based on parent height?
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === childNode.id) {
+          const bounds = getNodesBounds([node]);
+          console.log("Bounds of nodes:", bounds);
           return {
             ...node,
             parentId: newNode.id,
             position: {
-              x: node.position.x - newNode.position.x + 10, // TODO something is off with these positions
-              y: node.position.y - newNode.position.y + 21, // TODO something is off with these positions
+              // TODO this is such bad practice, but I don't know how to fix the positioning of the child node
+              // This is a hack to position the child node relative to the new parent node
+              x: node.position.x - newNode.position.x + 9 + bounds.width / 2,
+              y: node.position.y - newNode.position.y,
             },
           };
         }

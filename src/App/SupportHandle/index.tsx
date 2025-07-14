@@ -4,6 +4,8 @@ export function SupportHandle({
   id,
   position,
   parentId,
+  alignsWithParent,
+  nodeLabel,
   supportsParent,
   handleNodeParentSupportChange,
 }) {
@@ -18,6 +20,7 @@ export function SupportHandle({
       }}
       style={{
         background: supportsParent ? "green" : "red",
+        top: position === Position.Top && nodeLabel == "" ? "20px" : "",
         // TODO do we want to hide this?
         // visibility: parentId ? "visible" : "hidden",
       }}

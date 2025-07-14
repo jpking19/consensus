@@ -184,7 +184,7 @@ body,
 
 .react-flow__viewport {
   transform-origin: 0 0;
-  z-index: 2;
+  z-index: -2;
   pointer-events: none;
 }
 
@@ -264,7 +264,7 @@ body,
 .react-flow__edge.consensus_unaligned {
   stroke-dasharray: 5;
   stroke: red;
-  animation: dashdraw 0.5s linear infinite;
+  animation: none;
   animation-direction: reverse;
 }
 
@@ -373,9 +373,9 @@ svg.react-flow__connectionline {
 
 .react-flow__handle_acceptance {
   position: absolute;
-  z-index: -1;
-  width: 32px;
-  height: 36px;
+  z-index: 1;
+  width: 20px;
+  height: 28px;
   /* top: 50%; */
   border-top-left-radius: 8px;
   border-bottom-left-radius: 8px;
@@ -386,7 +386,7 @@ svg.react-flow__connectionline {
     --xy-handle-border-color,
     var(--xy-handle-border-color-default)
   );
-  transition: background-color 0.2s, left 0.2s, top 0.2s;
+  transition: background-color 0.2s, left 0.2s, right 0.2s, top 0.2s;
 }
 
 .react-flow__handle_support {
