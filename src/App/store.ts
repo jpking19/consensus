@@ -1,4 +1,6 @@
 import {
+  type Node,
+  type Edge,
   type EdgeChange,
   type NodeChange,
   type OnNodesChange,
@@ -41,6 +43,7 @@ export type RFState = {
     parentHandleId: string | null
   ) => void;
   addParentNode: (childNode: InternalNode, position: XYPosition) => void;
+  onDelete: (params: { nodes: Node[]; edges: Edge[] }) => void;
   updateNodeConnectingUser: (
     nodeId: string,
     user: "left" | "right" | "both" | null
@@ -148,13 +151,25 @@ const useStore = create<RFState>((set, get) => ({
 
         if (node.parentId === nodeId && node.data.user === side) {
           // If the iterated node is a child of the node being updated, determine if it aligns with the parent's acceptance state
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              alignsWithParent: userAcceptance == node.data.supportsParent,
-            },
-          };
+          if (node.data.label === "") {
+            // If the child node has no label, it should always align with the parent's acceptance state
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                alignsWithParent: true,
+                supportsParent: userAcceptance,
+              },
+            };
+          } else {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                alignsWithParent: userAcceptance == node.data.supportsParent,
+              },
+            };
+          }
         }
 
         return node;
@@ -250,7 +265,6 @@ const useStore = create<RFState>((set, get) => ({
       nodes: [...get().nodes, newNode],
     });
 
-    // TODO needs to account for the source of the connection
     if (parentHandleId !== null) {
       const newEdge: BeliefEdge = {
         id: nanoid(),
@@ -360,6 +374,35 @@ const useStore = create<RFState>((set, get) => ({
     set({
       edges: [...get().edges, newEdge],
     });
+  },
+  onDelete: (params: { nodes: Node[]; edges: Edge[] }) => {
+    const nodesToDelete = params.nodes as BeliefNode[];
+    const nodeIdsToDelete = new Set(nodesToDelete.map((n) => n.id));
+    console.log("Deleting nodes:", nodeIdsToDelete);
+    set({
+      nodes: get()
+        .nodes.filter((node) => node.id in nodeIdsToDelete)
+        .map((node) => {
+          // If the node being deleted is a parent, we need to remove its parentId from its children
+          if (node.parentId && node.parentId in nodeIdsToDelete) {
+            return {
+              ...node,
+              parentId: undefined,
+            };
+          }
+          return node;
+        }),
+      edges: get().edges.filter(
+        (edge) =>
+          !(edge.source in nodeIdsToDelete) || edge.target in nodeIdsToDelete
+      ),
+    });
+
+    // const edgesToDelete = params.edges as BeliefEdge[];
+    // const edgeIdsToDelete = new Set(edgesToDelete.map((e) => e.id));
+    // set({
+    //   edges: get().edges.filter((edge) => edge.id in edgeIdsToDelete),
+    // });
   },
   updateNodeConnectingUser: (
     nodeId: string,

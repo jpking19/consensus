@@ -13,6 +13,8 @@ import {
   type ReactFlowInstance,
 } from "@xyflow/react";
 import { useShallow } from "zustand/react/shallow";
+import { DevTools } from "../components/devtools";
+
 import fs from "vite-plugin-fs/browser";
 
 import path from "path";
@@ -40,6 +42,7 @@ const selector = (state: RFState) => ({
   addNode: state.addNode,
   addChildNode: state.addChildNode,
   addParentNode: state.addParentNode,
+  onDelete: state.onDelete,
   updateNodeConnectingUser: state.updateNodeConnectingUser,
 });
 
@@ -63,6 +66,7 @@ function Flow() {
     addNode,
     addChildNode,
     addParentNode,
+    onDelete,
     updateNodeConnectingUser,
   } = useStore(useShallow(selector));
   const { screenToFlowPosition } = useReactFlow();
@@ -210,6 +214,7 @@ function Flow() {
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onDelete={onDelete}
       connectionLineComponent={SupportConnection}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
@@ -234,6 +239,7 @@ function Flow() {
       </Panel>
       <Controls />
       <MiniMap />
+      <DevTools position="top-left" />
     </ReactFlow>
   );
 }
