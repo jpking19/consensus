@@ -2,6 +2,7 @@ import { type Node, type Edge } from "@xyflow/react";
 
 export type NodeData = {
   label: string;
+  placeholderLabel: string;
   user: "left" | "right" | "both"; // Indicates which user this belief belongs to
   connectingUser?: "left" | "right" | "both" | null; // Indicates which user is currently connecting from this belief
   parentId?: string;

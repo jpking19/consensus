@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -11,13 +11,13 @@ import {
   Controls,
   Panel,
   type ReactFlowInstance,
+  useKeyPress,
 } from "@xyflow/react";
 import { useShallow } from "zustand/react/shallow";
+// TODO install DevTools when ready to migrate to version 12
 import { DevTools } from "../components/devtools";
 
 import fs from "vite-plugin-fs/browser";
-
-import path from "path";
 
 import useStore, { type RFState } from "./store";
 import BeliefNode from "./BeliefNode";
@@ -208,13 +208,18 @@ function Flow() {
     restoreFlow();
   }, [setNodes]);
 
+  const deletePressed = useKeyPress(["Delete", "Backspace"]);
+  useEffect(() => {
+    onDelete();
+  }, [deletePressed]);
+
   return (
     <ReactFlow
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
-      onDelete={onDelete}
+      // onDelete={onDelete}
       connectionLineComponent={SupportConnection}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
@@ -227,6 +232,7 @@ function Flow() {
       colorMode="dark"
       disableKeyboardA11y
       fitView
+      deleteKeyCode={[]}
     >
       <Background />
       <Panel position="top-right">

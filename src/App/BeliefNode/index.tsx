@@ -47,6 +47,8 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
 
   useLayoutEffect(() => {
     if (textAreaRef.current) {
+      // TODO please god put this width calculation in a util class
+
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
       if (!context) {

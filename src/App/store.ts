@@ -10,6 +10,7 @@ import {
   getNodesBounds,
   type XYPosition,
   type InternalNode,
+  useInternalNode,
 } from "@xyflow/react";
 import { create } from "zustand";
 import { nanoid } from "nanoid/non-secure";
@@ -43,7 +44,7 @@ export type RFState = {
     parentHandleId: string | null
   ) => void;
   addParentNode: (childNode: InternalNode, position: XYPosition) => void;
-  onDelete: (params: { nodes: Node[]; edges: Edge[] }) => void;
+  onDelete: () => void;
   updateNodeConnectingUser: (
     nodeId: string,
     user: "left" | "right" | "both" | null
@@ -57,6 +58,7 @@ const useStore = create<RFState>((set, get) => ({
       type: "belief",
       data: {
         label: "",
+        placeholderLabel: "What do you believe?",
         user: "both", // Indicates this belief is shared by both users
         supportsParent: true,
         alignsWithParent: true,
@@ -219,6 +221,7 @@ const useStore = create<RFState>((set, get) => ({
       type: "belief",
       data: {
         label: "",
+        placeholderLabel: "What do you believe?",
         user: "both", // Indicates this belief is shared by both users
         supportsParent: true, // Initially has no parent
         alignsWithParent: true, // Initially has no parent
@@ -247,6 +250,7 @@ const useStore = create<RFState>((set, get) => ({
       type: "belief",
       data: {
         label: "",
+        placeholderLabel: "What do you believe?",
         // TODO need to define USER ID globally
         user: user === "left" || user === "right" ? user : "both", // Indicates which user this belief belongs to
         supportsParent: Boolean(parentNode.data[`${user}Acceptance`]), // Depends on the User's acceptance state of the parent belief
@@ -295,6 +299,7 @@ const useStore = create<RFState>((set, get) => ({
       type: "belief",
       data: {
         label: "",
+        placeholderLabel: "What do you believe?",
         user: user === "left" || user === "right" ? user : "both", // Indicates which user this belief belongs to
         supportsParent: true, // Initially has no parent
         alignsWithParent: true, // Initially has no parent
@@ -375,34 +380,122 @@ const useStore = create<RFState>((set, get) => ({
       edges: [...get().edges, newEdge],
     });
   },
-  onDelete: (params: { nodes: Node[]; edges: Edge[] }) => {
-    const nodesToDelete = params.nodes as BeliefNode[];
+  onDelete: () => {
+    // We must filter out the nodes that are unselected
+    const nodesToDelete = (get().nodes as BeliefNode[]).filter(
+      (node) => node.selected
+    );
     const nodeIdsToDelete = new Set(nodesToDelete.map((n) => n.id));
-    console.log("Deleting nodes:", nodeIdsToDelete);
+    const parentNodePositions = new Map<string, XYPosition>();
+
+    // Need to recursively find absolute positions of all parent nodes
+    get().nodes.forEach((node) => {
+      let currentNode: BeliefNode | undefined = node;
+      let nextNode: BeliefNode | undefined;
+      let parentAbsolutePosition = {
+        x: 0,
+        y: 0,
+      };
+      while (currentNode) {
+        parentAbsolutePosition.x += currentNode.position.x;
+        parentAbsolutePosition.y += currentNode.position.y;
+
+        nextNode = get().nodes.find((c) => c.id === currentNode?.parentId);
+        // Need to update the position by the width of its immediate parent as well
+        if (nextNode === undefined) {
+          // TODO please god put this width calculation in a util class
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+          if (!context) {
+            console.error("Failed to get canvas context");
+            return;
+          }
+          const font = "12px monospace"; // Adjust as needed
+          context.font = font;
+          const metrics = context.measureText(currentNode.data.label);
+          let currentWidth = 0;
+
+          const placeHolderMetrics = context.measureText(
+            currentNode.data.placeholderLabel
+          );
+          const placeholderWidth = Math.ceil(placeHolderMetrics.width);
+          if (metrics.width < placeholderWidth) {
+            // If the label is empty/smaller than placeholder, we use the placeholder width
+            currentWidth = Math.ceil(placeHolderMetrics.width);
+          } else if (metrics.width < 300) {
+            // If the label is less than 300px, we use the label width
+            currentWidth = Math.ceil(metrics.width);
+          } else {
+            currentWidth = 300; // Set a max width
+          }
+          // TODO this is not quite right, something with the padding
+          parentAbsolutePosition.x -= currentWidth + 20;
+        }
+        currentNode = nextNode;
+      }
+      parentNodePositions.set(node.id, parentAbsolutePosition);
+    });
+
     set({
       nodes: get()
-        .nodes.filter((node) => node.id in nodeIdsToDelete)
+        .nodes.filter((node) => !node.selected)
         .map((node) => {
           // If the node being deleted is a parent, we need to remove its parentId from its children
-          if (node.parentId && node.parentId in nodeIdsToDelete) {
+          if (node.parentId && nodeIdsToDelete.has(node.parentId)) {
+            console.log("Keeping child node:", node.id);
             return {
               ...node,
+              // Reset the position of the child node from being relative to the parent's position
+              position: {
+                x: node.position.x + parentNodePositions.get(node.parentId)?.x,
+                y: node.position.y + parentNodePositions.get(node.parentId)?.y,
+              },
               parentId: undefined,
             };
           }
+          console.log("Keeping node:", node.id);
           return node;
         }),
+      // Filter out edges that are connected to the nodes being deleted
       edges: get().edges.filter(
         (edge) =>
-          !(edge.source in nodeIdsToDelete) || edge.target in nodeIdsToDelete
+          !nodeIdsToDelete.has(edge.source) && !nodeIdsToDelete.has(edge.target)
       ),
     });
 
-    // const edgesToDelete = params.edges as BeliefEdge[];
-    // const edgeIdsToDelete = new Set(edgesToDelete.map((e) => e.id));
-    // set({
-    //   edges: get().edges.filter((edge) => edge.id in edgeIdsToDelete),
-    // });
+    // TODO remove
+    console.log("Deleted nodes:", nodesToDelete);
+    console.log("Remaining nodes:", get().nodes);
+
+    // Now delete the edges that are selected
+    const edgesToDelete = get().edges.filter((edge) => edge.selected);
+    const nodesToRemoveLineage = new Set<string>();
+    edgesToDelete.forEach((edge) => {
+      // If the edge is a child of a node being deleted, we need to remove the lineage
+      nodesToRemoveLineage.add(edge.target);
+    });
+    console.log("Nodes to remove lineage:", nodesToRemoveLineage);
+    const edgeIdsToDelete = new Set(edgesToDelete.map((e) => e.id));
+    set({
+      // Set nodes with deleted edges to not have parentId any longer
+      nodes: get().nodes.map((node) => {
+        if (nodesToRemoveLineage.has(node.id)) {
+          return {
+            ...node,
+            // Reset the position of the child node from being relative to the parent's position
+            // TODO these positions are not getting set right AT ALL
+            position: {
+              x: node.position.x + parentNodePositions.get(node.id)?.x,
+              y: node.position.y + parentNodePositions.get(node.id)?.y,
+            },
+            parentId: undefined,
+          };
+        }
+        return node;
+      }),
+      // Filter out edges that are connected to the edges being deleted
+      edges: get().edges.filter((edge) => !edgeIdsToDelete.has(edge.id)),
+    });
   },
   updateNodeConnectingUser: (
     nodeId: string,
