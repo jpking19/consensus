@@ -9,15 +9,11 @@ import {
   useReactFlow,
   useStoreApi,
   Controls,
-  Panel,
   type ReactFlowInstance,
   useKeyPress,
 } from "@xyflow/react";
 import { useShallow } from "zustand/react/shallow";
-// TODO install DevTools when ready to migrate to version 12
 import { DevTools } from "../components/devtools";
-
-import fs from "vite-plugin-fs/browser";
 
 import useStore, { type RFState } from "./store";
 import BeliefNode from "./BeliefNode";
@@ -49,11 +45,6 @@ const selector = (state: RFState) => ({
 // this places the node origin in the center of a node
 const nodeOrigin: NodeOrigin = [0.5, 0];
 
-// TODO proper flow key management
-const flowKey = "consensus-flow";
-// const conversationsDir = path.join(__dirname, "..", "conversations");
-const flowFilePath = "./flows/flow.json";
-
 function Flow() {
   const store = useStoreApi();
   const {
@@ -73,6 +64,17 @@ function Flow() {
   const connectingNodeId = useRef<string | null>(null);
   const connectingHandleId = useRef<string | null>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+  const [flowName, setFlowName] = useState("");
+  const [savedFlows, setSavedFlows] = useState<string[]>([]);
+  const [selectedFlow, setSelectedFlow] = useState("");
+
+  // Load saved flow names from localStorage on mount
+  useEffect(() => {
+    const keys = Object.keys(localStorage).filter((key) =>
+      key.startsWith("consensus-flow-")
+    );
+    setSavedFlows(keys.map((key) => key.replace("consensus-flow-", "")));
+  }, []);
 
   const onConnectStart: OnConnectStart = useCallback(
     (_, { nodeId, handleId }) => {
@@ -172,41 +174,37 @@ function Flow() {
     [screenToFlowPosition]
   );
 
+  // Save flow with user-provided name
   const onSave = useCallback(() => {
-    if (rfInstance) {
+    if (rfInstance && flowName) {
       const flow = rfInstance.toObject();
-      // Save to localStorage for browser persistence
-      localStorage.setItem(flowKey, JSON.stringify(flow));
-      // Also save to file in conversations directory
-      try {
-        fs.writeFile(flowFilePath, JSON.stringify(flow, null, 2));
-      } catch (err) {
-        console.error("Error saving flow to file:", err);
-      }
+      localStorage.setItem(`consensus-flow-${flowName}`, JSON.stringify(flow));
+      setSavedFlows((prev) =>
+        prev.includes(flowName) ? prev : [...prev, flowName]
+      );
+      alert(`Flow saved as '${flowName}'`);
+    } else {
+      alert("Please enter a name for your flow before saving.");
     }
-  }, [rfInstance]);
+  }, [rfInstance, flowName]);
 
+  // Restore flow from selected name
   const onRestore = useCallback(() => {
-    const restoreFlow = async () => {
-      let flow = null;
-      // Try to load from file first
-      try {
-        const fileContent = await fs.readFile(flowFilePath);
-        flow = JSON.parse(fileContent);
-      } catch (err) {
-        console.error("Error loading flow from file:", err);
-      }
-      // Fallback to localStorage if file not found
+    if (selectedFlow) {
+      const flow = JSON.parse(
+        localStorage.getItem(`consensus-flow-${selectedFlow}`) || "null"
+      );
       if (flow) {
         setNodes(flow.nodes || []);
         setEdges(flow.edges || []);
-        // TODO restore viewport
-        // setViewport({ x, y, zoom });
+        // TODO restore viewport if needed
+      } else {
+        alert("No flow found for selected name.");
       }
-    };
-
-    restoreFlow();
-  }, [setNodes]);
+    } else {
+      alert("Please select a flow to restore.");
+    }
+  }, [selectedFlow, setNodes, setEdges]);
 
   const deletePressed = useKeyPress(["Delete", "Backspace"]);
   useEffect(() => {
@@ -214,39 +212,59 @@ function Flow() {
   }, [deletePressed]);
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      // onDelete={onDelete}
-      connectionLineComponent={SupportConnection}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      onInit={setRfInstance}
-      onClick={onClick}
-      onKeyDown={onKeyDown}
-      onConnectStart={onConnectStart}
-      onConnectEnd={onConnectEnd}
-      nodeOrigin={nodeOrigin}
-      colorMode="dark"
-      disableKeyboardA11y
-      fitView
-      deleteKeyCode={[]}
-    >
-      <Background />
-      <Panel position="top-right">
-        <button className="xy-theme__button" onClick={onSave}>
-          save
+    <>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <input
+          type="text"
+          value={flowName}
+          onChange={(e) => setFlowName(e.target.value)}
+          placeholder="Enter flow name"
+          style={{ padding: 4 }}
+        />
+        <button onClick={onSave} style={{ padding: 4 }}>
+          Save Flow
         </button>
-        <button className="xy-theme__button" onClick={onRestore}>
-          restore
+        <select
+          value={selectedFlow}
+          onChange={(e) => setSelectedFlow(e.target.value)}
+          style={{ padding: 4 }}
+        >
+          <option value="">Select saved flow</option>
+          {savedFlows.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <button onClick={onRestore} style={{ padding: 4 }}>
+          Restore Flow
         </button>
-      </Panel>
-      <Controls />
-      <MiniMap />
-      <DevTools position="top-left" />
-    </ReactFlow>
+      </div>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        connectionLineComponent={SupportConnection}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        onInit={setRfInstance}
+        onClick={onClick}
+        onKeyDown={onKeyDown}
+        onConnectStart={onConnectStart}
+        onConnectEnd={onConnectEnd}
+        nodeOrigin={nodeOrigin}
+        colorMode="dark"
+        disableKeyboardA11y
+        fitView
+        deleteKeyCode={[]}
+      >
+        <Background />
+        <Controls />
+        <MiniMap />
+        <DevTools position="top-left" />
+      </ReactFlow>
+    </>
   );
 }
 

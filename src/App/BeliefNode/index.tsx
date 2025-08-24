@@ -117,8 +117,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
             resize: "none",
             textAlign: "left",
           }}
-          // TODO autocorrect
-          // TODO spellcheck
+          spellCheck="false"
           placeholder="What do you believe?"
           ref={textAreaRef}
           readOnly={!data.alignsWithParent}
