@@ -38,6 +38,7 @@ const selector = (state: RFState) => ({
   addNode: state.addNode,
   addChildNode: state.addChildNode,
   addParentNode: state.addParentNode,
+  addEdge: state.addEdge,
   onDelete: state.onDelete,
   updateNodeConnectingUser: state.updateNodeConnectingUser,
 });
@@ -57,6 +58,7 @@ function Flow() {
     addNode,
     addChildNode,
     addParentNode,
+    addEdge,
     onDelete,
     updateNodeConnectingUser,
   } = useStore(useShallow(selector));
@@ -80,8 +82,19 @@ function Flow() {
     (_, { nodeId, handleId }) => {
       connectingNodeId.current = nodeId;
       connectingHandleId.current = handleId;
-      if (nodeId) {
-        updateNodeConnectingUser(nodeId, null); // Reset the connecting user
+      if (nodeId && handleId) {
+        if (handleId.includes("source")) {
+          // Acceptance Handle
+          // Set connecting user so we can track if connection is still valid
+          updateNodeConnectingUser(
+            nodeId,
+            handleId.includes("left") ? "left" : "right"
+          );
+        } else {
+          // Support Handle
+          // Reset the connecting user, to require left/right input
+          updateNodeConnectingUser(nodeId, null);
+        }
       }
     },
     []
@@ -93,6 +106,9 @@ function Flow() {
       const targetIsPane = (event.target as Element).classList.contains(
         "react-flow__pane"
       );
+      const targetIsAcceptanceHandle = (
+        event.target as Element
+      ).classList.contains("source");
 
       if (targetIsPane && connectingNodeId.current) {
         if (
@@ -124,7 +140,13 @@ function Flow() {
         ) {
           // Check if user has pressed left or right arrow key
           const childNode = nodeLookup.get(connectingNodeId.current);
-          // if (childNode.connectingUser != null) {
+          const user = (childNode.data as BeliefNode["data"]).connectingUser;
+          if (!user) {
+            console.error("No user specified for adding parent node");
+            // TODO probably show some stronger visual feedback here
+            return;
+          }
+
           const { clientX, clientY } =
             "changedTouches" in event ? event.changedTouches[0] : event;
 
@@ -138,6 +160,20 @@ function Flow() {
           if (childNode && parentNodePosition) {
             addParentNode(childNode, parentNodePosition);
           }
+        }
+      } else if (targetIsAcceptanceHandle && connectingNodeId.current) {
+        // Handle connection to acceptance handle
+        const childNode = nodeLookup.get(connectingNodeId.current);
+        const parentNodeId = (event.target as Element).getAttribute(
+          "data-nodeId"
+        );
+        const parentNode = nodeLookup.get(parentNodeId!);
+        const targetHandleId = (event.target as Element).getAttribute(
+          "data-handleId"
+        );
+
+        if (childNode && parentNode && targetHandleId) {
+          addEdge(childNode, parentNode, targetHandleId);
         }
       }
     },
@@ -155,6 +191,10 @@ function Flow() {
       connectingNodeId.current
     ) {
       updateNodeConnectingUser(connectingNodeId.current, "right");
+    } else if (event.key === "Escape" && connectingNodeId.current) {
+      updateNodeConnectingUser(connectingNodeId.current, null);
+      connectingNodeId.current = null;
+      connectingHandleId.current = null;
     }
   }, []);
 

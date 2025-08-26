@@ -1,4 +1,3 @@
-import { React } from "react";
 import {
   Position,
   useConnection,
@@ -37,8 +36,8 @@ export default ({ fromX, fromY, toX, toY }) => {
           opacity={nodeData?.connectingUser ? 1 : 0.5}
           strokeWidth={1.5}
           className="animated" // TODO not animated when not connectingUser
-          style={{ animationDirection: "reverse" }} // TODO check on the type
-          d={edgePath} //{`M${fromX},${fromY} C ${fromX} ${toY} ${fromX} ${toY} ${toX},${toY}`}
+          style={{ animationDirection: "reverse" }}
+          d={edgePath}
         />
         <circle
           cx={toX}
@@ -51,6 +50,10 @@ export default ({ fromX, fromY, toX, toY }) => {
       </g>
     );
   } else if (fromHandle?.type == "source") {
+    if (nodeData?.connectingUser === null) {
+      return null;
+    }
+
     // Connection for creating a new child belief needs to account for source Handle
     const [edgePath] = getBezierPath({
       // TODO this is half the width of the AcceptanceHandle

@@ -44,6 +44,11 @@ export type RFState = {
     parentHandleId: string | null
   ) => void;
   addParentNode: (childNode: InternalNode, position: XYPosition) => void;
+  addEdge: (
+    childNode: InternalNode,
+    parentNode: InternalNode,
+    parentHandleId: string | null
+  ) => void;
   onDelete: () => void;
   updateNodeConnectingUser: (
     nodeId: string,
@@ -287,11 +292,6 @@ const useStore = create<RFState>((set, get) => ({
   addParentNode: (childNode: InternalNode, position: XYPosition) => {
     // Get the user from the child node (this is the user that asserting new belief)
     const user = (childNode.data as BeliefNode["data"]).connectingUser;
-    if (!user) {
-      console.error("No user specified for adding parent node");
-      // TODO probably show some stronger visual feedback here
-      return;
-    }
 
     // Create new parent node based on the child node's position
     const newNode: BeliefNode = {
@@ -324,7 +324,6 @@ const useStore = create<RFState>((set, get) => ({
       nodes: get().nodes.map((node) => {
         if (node.id === childNode.id) {
           const bounds = getNodesBounds([node]);
-          console.log("Bounds of nodes:", bounds);
           return {
             ...node,
             parentId: newNode.id,
@@ -378,6 +377,69 @@ const useStore = create<RFState>((set, get) => ({
 
     set({
       edges: [...get().edges, newEdge],
+    });
+  },
+  addEdge: (
+    childNode: InternalNode,
+    parentNode: InternalNode,
+    parentHandleId: string | null
+  ) => {
+    const newEdge: BeliefEdge = {
+      id: nanoid(),
+      type: "beliefEdge",
+      target: childNode.id,
+      source: parentNode.id,
+      sourceHandle: parentHandleId,
+    };
+
+    set({
+      edges: [...get().edges, newEdge],
+    });
+
+    // Update the child node to have this new node as its parent,
+    // and update its position to be relative to the new parent node
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id === childNode.id) {
+          const bounds = getNodesBounds([node]);
+          return {
+            ...node,
+            parentId: parentNode.id,
+            position: {
+              // TODO this is such bad practice, but I don't know how to fix the positioning of the child node
+              // This is a hack to position the child node relative to the new parent node
+              x: node.position.x - parentNode.position.x + 9 + bounds.width / 2,
+              y: node.position.y - parentNode.position.y,
+            },
+          };
+        }
+        return node;
+      }),
+    });
+
+    // TODO define this outside, we're going to use it in multiple places
+    // Recursively find all child nodes, and add them to the sorted nodes
+    const addChildren = (parentId: string) => {
+      get().nodes.forEach((child) => {
+        if (child.parentId === parentId) {
+          sortedNodes.push(child);
+          addChildren(child.id);
+        }
+      });
+    };
+
+    // Sort nodes to ensure the new parent node is added after the child node
+    // This is important for React Flow to render the edges correctly
+    let sortedNodes: BeliefNode[] = [];
+    get().nodes.forEach((node) => {
+      if (node.parentId == null) {
+        sortedNodes.push(node);
+        addChildren(node.id);
+      }
+    });
+
+    set({
+      nodes: [...sortedNodes],
     });
   },
   onDelete: () => {
@@ -462,10 +524,6 @@ const useStore = create<RFState>((set, get) => ({
           !nodeIdsToDelete.has(edge.source) && !nodeIdsToDelete.has(edge.target)
       ),
     });
-
-    // TODO remove
-    console.log("Deleted nodes:", nodesToDelete);
-    console.log("Remaining nodes:", get().nodes);
 
     // Now delete the edges that are selected
     const edgesToDelete = get().edges.filter((edge) => edge.selected);

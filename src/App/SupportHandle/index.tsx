@@ -18,6 +18,8 @@ export function SupportHandle({
       onClick={(event) => {
         handleNodeParentSupportChange(event);
       }}
+      isConnectable={!parentId}
+      isConnectableEnd={false}
       style={{
         background: supportsParent ? "green" : "red",
         top: position === Position.Top && nodeLabel == "" ? "20px" : "",
