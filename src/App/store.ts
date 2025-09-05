@@ -323,14 +323,16 @@ const useStore = create<RFState>((set, get) => ({
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === childNode.id) {
-          const bounds = getNodesBounds([node]);
+          console.log("Child node position", node.position.x);
           return {
             ...node,
             parentId: newNode.id,
             position: {
-              // TODO this is such bad practice, but I don't know how to fix the positioning of the child node
               // This is a hack to position the child node relative to the new parent node
-              x: node.position.x - newNode.position.x + 9 + bounds.width / 2,
+              // But listen, it works and you can't access the new parent node's internals here
+              x:
+                node.position.x -
+                (newNode.position.x - (node.measured?.width / 2 || 0) - 11.75),
               y: node.position.y - newNode.position.y,
             },
           };
@@ -402,14 +404,19 @@ const useStore = create<RFState>((set, get) => ({
       nodes: get().nodes.map((node) => {
         if (node.id === childNode.id) {
           const bounds = getNodesBounds([node]);
+          console.log("Child node position", node.position.x);
+          console.log("New parent position:", parentNode.position.x);
+          console.log(
+            "New parent ABSOLUTE:",
+            parentNode.internals.positionAbsolute.x
+          );
+          console.log("New parent measured:", parentNode.measured);
           return {
             ...node,
             parentId: parentNode.id,
             position: {
-              // TODO this is such bad practice, but I don't know how to fix the positioning of the child node
-              // This is a hack to position the child node relative to the new parent node
-              x: node.position.x - parentNode.position.x + 9 + bounds.width / 2,
-              y: node.position.y - parentNode.position.y,
+              x: node.position.x - parentNode.internals.positionAbsolute.x,
+              y: node.position.y - parentNode.internals.positionAbsolute.y,
             },
           };
         }
