@@ -323,7 +323,6 @@ const useStore = create<RFState>((set, get) => ({
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === childNode.id) {
-          console.log("Child node position", node.position.x);
           return {
             ...node,
             parentId: newNode.id,

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import Dagre from "@dagrejs/dagre";
 import {
   ReactFlow,
   Background,
@@ -42,6 +43,115 @@ const selector = (state: RFState) => ({
   onDelete: state.onDelete,
   updateNodeConnectingUser: state.updateNodeConnectingUser,
 });
+
+import type { Node, Edge } from "@xyflow/react";
+
+type LayoutOptions = {
+  direction: "TB" | "BT" | "LR" | "RL";
+};
+
+const getLayoutedElements = (
+  nodes: BeliefNode[],
+  edges: BeliefEdge[],
+  options: LayoutOptions
+) => {
+  const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  g.setGraph({ rankdir: options.direction });
+
+  let dagreIdMap = new Map<string, string>();
+  // Iterate through nodes (parents always come first) and convert list into a binary tree
+
+  const buildTree = (nodes: BeliefNode[]): BeliefNode[] => {
+    const nodeMap = new Map<string, BeliefNode>();
+    nodes.forEach((node) => {
+      nodeMap.set(node.id, {
+        ...node,
+        children: [],
+      });
+    });
+
+    const roots: BeliefNode[] = [];
+    nodeMap.forEach((node) => {
+      if (node.parentId) {
+        const parent = nodeMap.get(node.parentId);
+        if (parent) {
+          parent.children.push(node);
+        }
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  };
+
+  const roots = buildTree(nodes);
+  console.log("Dagre roots", roots);
+
+  // Loop through the tree and assign dagre IDs
+  // const assignDagreIds = (node: BeliefNode, level: number) => {
+  //   let side =
+  //     level === 0 ? "root" : node.data.user === "left" ? "left" : "right";
+  //   dagreIdMap.set(`dagre-${level}-${side}-${node.id}`, node.id);
+  //   node.id = `dagre-${level}-${side}-${node.id}`;
+  //   node.children.forEach((child) => assignDagreIds(child, level + 1));
+  // };
+  // roots.forEach((root) => assignDagreIds(root, 0));
+
+  // console.log("Dagre ID map", dagreIdMap);
+  // console.log("Dagre nodes", roots);
+
+  edges.forEach((edge) => g.setEdge(edge.source, edge.target));
+  nodes.forEach((node) =>
+    g.setNode(node.id, {
+      ...node,
+      id: node.id,
+      width: node.measured?.width ?? 0,
+      height: node.measured?.height ?? 0,
+    })
+  );
+
+  Dagre.layout(g);
+
+  // console.log("Dagre graph", g);
+
+  return {
+    nodes: nodes.map((node) => {
+      // offset by parent position if exists
+      const nodeWithPosition = g.node(node.id);
+      if (node.parentId) {
+        const parentNodeWithPosition = g.node(node.parentId);
+        node.position = {
+          x:
+            nodeWithPosition.x -
+            (parentNodeWithPosition.x - parentNodeWithPosition.width / 2), // -
+          //(node.measured?.width ?? 0) / 2,
+          y:
+            nodeWithPosition.y -
+            (parentNodeWithPosition.y - parentNodeWithPosition.height / 2), // -
+          //(node.measured?.height ?? 0) / 2,
+        };
+      } else {
+        node.position = {
+          x: nodeWithPosition.x - nodeWithPosition.width / 2,
+          y: nodeWithPosition.y - nodeWithPosition.height / 2,
+        };
+      }
+
+      // const position = g.node(node.id);
+      // console.log("Dagre position for node", node.id, position.x, position.y);
+      // // We are shifting the dagre node position (anchor=center center) to the top left
+      // // so it matches the React Flow node anchor point (top left).
+      // const x = position.x - (node.measured?.width ?? 0) / 2;
+      // const y = position.y - (node.measured?.height ?? 0) / 2;
+
+      // TODO reset ID i suppose
+      // return { ...node, position: { x, y } };
+      return node;
+    }),
+    edges,
+  };
+};
 
 // this places the node origin in the center of a node
 const nodeOrigin: NodeOrigin = [0.5, 0];
@@ -235,8 +345,13 @@ function Flow() {
         localStorage.getItem(`consensus-flow-${selectedFlow}`) || "null"
       );
       if (flow) {
-        setNodes(flow.nodes || []);
-        setEdges(flow.edges || []);
+        // Arrange the nodes in a top-bottom layout on restore
+        let options: LayoutOptions = { direction: "TB" };
+        const { nodes: layoutedNodes, edges: layoutedEdges } =
+          getLayoutedElements(flow.nodes || [], flow.edges || [], options);
+
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
         // TODO restore viewport if needed
       } else {
         alert("No flow found for selected name.");
