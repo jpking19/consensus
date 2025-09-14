@@ -100,14 +100,18 @@ const useStore = create<RFState>((set, get) => ({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
           if (resetLeftChildren || resetRightChildren) {
-            // If the label has changed, reset acceptance states
+            // If the label has changed, reset acceptance states for the other user
             return {
               ...node,
               data: {
                 ...node.data,
                 label,
-                leftAcceptance: false,
-                rightAcceptance: false,
+                leftAcceptance: resetLeftChildren
+                  ? false
+                  : node.data.leftAcceptance,
+                rightAcceptance: resetRightChildren
+                  ? false
+                  : node.data.rightAcceptance,
               },
             };
           }
@@ -249,7 +253,11 @@ const useStore = create<RFState>((set, get) => ({
       x: parentNode.internals.positionAbsolute.x,
       y: parentNode.internals.positionAbsolute.y,
     };
-    const user = parentHandleId?.split("-")[2];
+    const user = parentHandleId?.includes("left")
+      ? "left"
+      : parentHandleId?.includes("right")
+      ? "right"
+      : "both";
     const newNode: BeliefNode = {
       id: nanoid(),
       type: "belief",
@@ -257,11 +265,12 @@ const useStore = create<RFState>((set, get) => ({
         label: "",
         placeholderLabel: "What do you believe?",
         // TODO need to define USER ID globally
-        user: user === "left" || user === "right" ? user : "both", // Indicates which user this belief belongs to
+        user: user, // Indicates which user this belief belongs to
         supportsParent: Boolean(parentNode.data[`${user}Acceptance`]), // Depends on the User's acceptance state of the parent belief
         alignsWithParent: true, // Initially aligns with parent belief's acceptance state
-        leftAcceptance: false,
-        rightAcceptance: false,
+        // User who creates belief will always accept it until manually changed
+        leftAcceptance: user === "left" ? true : false,
+        rightAcceptance: user === "right" ? true : false,
       },
       position: {
         x: position.x - parentAbsolutePosition.x,
@@ -303,7 +312,7 @@ const useStore = create<RFState>((set, get) => ({
         user: user === "left" || user === "right" ? user : "both", // Indicates which user this belief belongs to
         supportsParent: true, // Initially has no parent
         alignsWithParent: true, // Initially has no parent
-        // TODO not sure I want to force acceptance here. But I suppose yes, since we are coming from supporting belief
+        // User who creates belief will always accept it until manually changed
         leftAcceptance: user === "left" ? true : false,
         rightAcceptance: user === "right" ? true : false,
       },
@@ -403,14 +412,6 @@ const useStore = create<RFState>((set, get) => ({
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === childNode.id) {
-          const bounds = getNodesBounds([node]);
-          console.log("Child node position", node.position.x);
-          console.log("New parent position:", parentNode.position.x);
-          console.log(
-            "New parent ABSOLUTE:",
-            parentNode.internals.positionAbsolute.x
-          );
-          console.log("New parent measured:", parentNode.measured);
           return {
             ...node,
             parentId: parentNode.id,

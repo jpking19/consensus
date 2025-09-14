@@ -89,10 +89,29 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
     }
   }, [id]);
 
+  let borderColor = "gray";
+  if (data.leftAcceptance && data.rightAcceptance) {
+    borderColor = "#2ecc71";
+  } else if (data.user === "left") {
+    borderColor = "#3498db";
+  } else if (data.user === "right") {
+    borderColor = "#e67e22";
+  }
+
+  let textColor = "white";
+  if (data.leftAcceptance && data.rightAcceptance) {
+    textColor = "#2ecc71";
+  } else if (data.user === "left") {
+    textColor = "#3498db";
+  } else if (data.user === "right") {
+    textColor = "#e67e22";
+  }
+
   return (
     <>
       <div
         className={"react-flow__node-belief"}
+        data-user={data.user}
         style={{
           opacity: data.alignsWithParent ? 1 : 0.5,
         }}
@@ -104,8 +123,10 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
             // If the label has changed, and the node's acceptance needs to change,
             // we reset the acceptance states and the children's support states
             const labelChanged = e.target.value !== data.label;
-            const resetLeftChildren = labelChanged && data.leftAcceptance;
-            const resetRightChildren = labelChanged && data.rightAcceptance;
+            const resetLeftChildren =
+              labelChanged && data.user == "right" && data.leftAcceptance;
+            const resetRightChildren =
+              labelChanged && data.user == "left" && data.rightAcceptance;
             updateNodeLabel(
               id,
               e.target.value,
@@ -116,6 +137,8 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
           style={{
             resize: "none",
             textAlign: "left",
+            borderColor: borderColor,
+            color: textColor,
           }}
           spellCheck="false"
           placeholder="What do you believe?"
@@ -136,6 +159,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         id={`source-${id}-left`}
         position={Position.Left}
         userAcceptance={data.leftAcceptance}
+        oppositeUserAcceptance={data.rightAcceptance}
         alignsWithParent={data.alignsWithParent}
         nodeLabel={data.label}
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
@@ -144,6 +168,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         id={`source-${id}-right`}
         position={Position.Right}
         userAcceptance={data.rightAcceptance}
+        oppositeUserAcceptance={data.leftAcceptance}
         alignsWithParent={data.alignsWithParent}
         nodeLabel={data.label}
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
