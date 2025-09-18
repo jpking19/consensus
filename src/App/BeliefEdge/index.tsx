@@ -1,8 +1,9 @@
-import { BaseEdge, getBezierPath, useStore } from "@xyflow/react";
+import { BaseEdge, Position, getBezierPath, useStore } from "@xyflow/react";
 import type { EdgeProps } from "@xyflow/react";
 import "../../index.css"; // Import the CSS for styling
 import type { BeliefEdge } from "../types";
 import { useMemo } from "react";
+import { ColorScheme } from "../colors";
 
 function BeliefEdge({
   id,
@@ -14,9 +15,11 @@ function BeliefEdge({
   targetY,
   sourcePosition,
   targetPosition,
-  animated,
 }: EdgeProps<BeliefEdge>) {
-  const nodeData = useStore((state) => state.nodeLookup.get(target)?.data);
+  const childNodeData = useStore((state) => state.nodeLookup.get(target)?.data);
+  const parentNodeData = useStore(
+    (state) => state.nodeLookup.get(source)?.data
+  );
 
   const [edgePath] = getBezierPath({
     sourceX,
@@ -28,33 +31,75 @@ function BeliefEdge({
   });
 
   // Use target node's data to get values for determing edge style
-  const consensus_edge_class = useMemo(() => {
-    if (nodeData) {
-      if (!nodeData.alignsWithParent) {
-        return "consensus_unaligned";
-      } else if (nodeData.alignsWithParent) {
-        if (nodeData.leftAcceptance && nodeData.rightAcceptance) {
-          return "consensus";
-        } else if (nodeData.leftAcceptance || nodeData.rightAcceptance) {
-          return "consensus_possible";
-        } else {
-          return "consensus_none";
+  const edgeStyle = useMemo(() => {
+    if (childNodeData && parentNodeData) {
+      if (!childNodeData.alignsWithParent) {
+        return {
+          strokeDasharray: 5,
+          stroke: ColorScheme.borderDefault,
+        };
+      } else if (childNodeData.alignsWithParent) {
+        if (childNodeData.leftAcceptance && childNodeData.rightAcceptance) {
+          if (childNodeData.supportsParent) {
+            return {
+              stroke: ColorScheme.consensus,
+            };
+          } else {
+            return {
+              stroke: ColorScheme.consensusDisagree,
+            };
+          }
+        } else if (
+          !childNodeData.leftAcceptance &&
+          !childNodeData.rightAcceptance
+        ) {
+          return {
+            strokeDasharray: 5,
+            stroke: ColorScheme.borderDefault,
+          };
+        } else if (
+          sourcePosition == Position.Left &&
+          parentNodeData.leftAcceptance
+        ) {
+          return {
+            stroke: ColorScheme.leftUser,
+          };
+        } else if (
+          sourcePosition == Position.Right &&
+          parentNodeData.rightAcceptance
+        ) {
+          return {
+            stroke: ColorScheme.rightUser,
+          };
+        } else if (
+          sourcePosition == Position.Left &&
+          !parentNodeData.leftAcceptance
+        ) {
+          return {
+            strokeDasharray: 5,
+            stroke: ColorScheme.consensusDisagree,
+          };
+        } else if (
+          sourcePosition == Position.Right &&
+          !parentNodeData.rightAcceptance
+        ) {
+          return {
+            strokeDasharray: 5,
+            stroke: ColorScheme.consensusDisagree,
+          };
         }
       }
     }
 
-    return "";
-  }, [nodeData]);
+    return {};
+  }, [childNodeData, parentNodeData]);
 
   return (
     <>
       <BaseEdge
         id={id}
-        className={`react-flow__edge selectable ${consensus_edge_class}`}
-        style={{
-          // animation: "dashdraw 1s linear infinite",
-          animationDirection: "reverse",
-        }}
+        className={`react-flow__edge selectable`}
+        style={edgeStyle}
         path={edgePath}
       />
     </>

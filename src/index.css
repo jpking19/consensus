@@ -28,7 +28,6 @@ body,
   height: 100%;
   color: white;
 }
-/* #3498db → #2ecc71 → #f39c12 */
 
 .react-flow {
   direction: ltr;
@@ -202,34 +201,6 @@ body,
 
 .react-flow__edge.selectable {
   cursor: pointer;
-}
-
-.react-flow__edge.consensus {
-  stroke-dasharray: 5;
-  stroke: white;
-  animation: dashdraw 0.5s linear infinite;
-  animation-direction: reverse;
-}
-
-.react-flow__edge.consensus_possible {
-  stroke-dasharray: 5;
-  stroke: goldenrod;
-  animation: dashdraw 0.8s linear infinite;
-  animation-direction: reverse;
-}
-
-.react-flow__edge.consensus_none {
-  stroke-dasharray: 5;
-  stroke: gray;
-  animation: dashdraw 1.1s linear infinite;
-  animation-direction: reverse;
-}
-
-.react-flow__edge.consensus_unaligned {
-  stroke-dasharray: 5;
-  stroke: red;
-  animation: none;
-  animation-direction: reverse;
 }
 
 .react-flow__edge.animated path.react-flow__edge-interaction {

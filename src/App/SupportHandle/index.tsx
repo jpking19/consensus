@@ -1,14 +1,45 @@
 import { Handle, Position } from "@xyflow/react";
+import { ColorScheme } from "../colors";
+
+interface SupportHandleProps {
+  id: string;
+  position: Position;
+  parentId: string | undefined;
+  user: string;
+  alignsWithParent: boolean;
+  leftAcceptance: boolean;
+  rightAcceptance: boolean;
+  nodeLabel: string;
+  supportsParent: boolean;
+  handleNodeParentSupportChange: (event: React.MouseEvent) => void;
+}
 
 export function SupportHandle({
   id,
   position,
   parentId,
+  user,
   alignsWithParent,
+  leftAcceptance,
+  rightAcceptance,
   nodeLabel,
   supportsParent,
   handleNodeParentSupportChange,
-}) {
+}: SupportHandleProps) {
+  let backgroundColor = ColorScheme.consensusNone;
+  if (leftAcceptance && rightAcceptance) {
+    if (supportsParent) {
+      backgroundColor = ColorScheme.consensus;
+    } else if (!supportsParent) {
+      backgroundColor = ColorScheme.consensusDisagree;
+    }
+  } else if (supportsParent) {
+    backgroundColor =
+      user === "left" ? ColorScheme.leftUser : ColorScheme.rightUser;
+  } else {
+    backgroundColor = ColorScheme.consensusDisagree;
+  }
+
   return (
     <Handle
       id={id}
@@ -21,10 +52,9 @@ export function SupportHandle({
       isConnectable={!parentId}
       isConnectableEnd={false}
       style={{
-        background: supportsParent ? "green" : "red",
+        background: backgroundColor,
         top: position === Position.Top && nodeLabel == "" ? "20px" : "",
-        // TODO do we want to hide this?
-        // visibility: parentId ? "visible" : "hidden",
+        opacity: alignsWithParent ? 1 : 0,
       }}
     />
   );

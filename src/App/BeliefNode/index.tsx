@@ -6,6 +6,7 @@ import useStore from "../store";
 import type { BeliefNode } from "../types";
 import { AcceptanceHandle } from "../AcceptanceHandle";
 import { SupportHandle } from "../SupportHandle";
+import { ColorScheme } from "../colors";
 
 import TextareaAutosize from "react-textarea-autosize";
 
@@ -89,22 +90,34 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
     }
   }, [id]);
 
-  let borderColor = "gray";
-  if (data.leftAcceptance && data.rightAcceptance) {
-    borderColor = "#2ecc71";
+  let borderColor = ColorScheme.borderDefault;
+  let textColor = ColorScheme.textDefault;
+  if (!data.alignsWithParent) {
+    borderColor = ColorScheme.unaligned;
+    textColor = ColorScheme.unaligned;
+  } else if (data.leftAcceptance && data.rightAcceptance) {
+    if (data.supportsParent) {
+      borderColor = ColorScheme.consensus;
+      textColor = ColorScheme.consensus;
+    } else {
+      borderColor = ColorScheme.consensusDisagree;
+      textColor = ColorScheme.consensusDisagree;
+    }
+  } else if (!data.leftAcceptance && !data.rightAcceptance) {
+    // root node needs to retain default colors
+    if (data.user === "both") {
+      borderColor = ColorScheme.borderDefault;
+      textColor = ColorScheme.textDefault;
+    } else {
+      borderColor = ColorScheme.unaligned;
+      textColor = ColorScheme.unaligned;
+    }
   } else if (data.user === "left") {
-    borderColor = "#3498db";
+    borderColor = ColorScheme.leftUser;
+    textColor = ColorScheme.leftUser;
   } else if (data.user === "right") {
-    borderColor = "#e67e22";
-  }
-
-  let textColor = "white";
-  if (data.leftAcceptance && data.rightAcceptance) {
-    textColor = "#2ecc71";
-  } else if (data.user === "left") {
-    textColor = "#3498db";
-  } else if (data.user === "right") {
-    textColor = "#e67e22";
+    borderColor = ColorScheme.rightUser;
+    textColor = ColorScheme.rightUser;
   }
 
   return (
@@ -150,7 +163,10 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         id={`target-${id}`}
         position={Position.Top}
         parentId={parentId}
+        user={data.user}
         alignsWithParent={data.alignsWithParent}
+        leftAcceptance={data.leftAcceptance}
+        rightAcceptance={data.rightAcceptance}
         nodeLabel={data.label}
         supportsParent={data.supportsParent}
         handleNodeParentSupportChange={handleNodeParentSupportChange}
@@ -161,6 +177,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         userAcceptance={data.leftAcceptance}
         oppositeUserAcceptance={data.rightAcceptance}
         alignsWithParent={data.alignsWithParent}
+        supportsParent={data.supportsParent}
         nodeLabel={data.label}
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
       />
@@ -170,6 +187,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         userAcceptance={data.rightAcceptance}
         oppositeUserAcceptance={data.leftAcceptance}
         alignsWithParent={data.alignsWithParent}
+        supportsParent={data.supportsParent}
         nodeLabel={data.label}
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
       />
