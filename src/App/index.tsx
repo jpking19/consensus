@@ -65,6 +65,8 @@ function Flow() {
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
   const connectingHandleId = useRef<string | null>(null);
+  const leftPressed = useKeyPress(["ArrowLeft", "a"]);
+  const rightPressed = useKeyPress(["ArrowRight", "d"]);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [flowName, setFlowName] = useState("");
   const [savedFlows, setSavedFlows] = useState<string[]>([]);
@@ -200,18 +202,26 @@ function Flow() {
 
   const onClick = useCallback(
     (event: React.MouseEvent) => {
-      if (event.ctrlKey) {
+      console.log("Click event", event);
+      console.log("Left pressed:", leftPressed, "Right pressed:", rightPressed);
+      if (event.ctrlKey || leftPressed || rightPressed) {
         const { clientX, clientY } = event;
         const targetIsPane = (event.target as Element).classList.contains(
           "react-flow__pane"
         );
         if (targetIsPane) {
           const flowPosition = screenToFlowPosition({ x: clientX, y: clientY });
-          addNode(flowPosition);
+          if (leftPressed) {
+            addNode(flowPosition, "left");
+          } else if (rightPressed) {
+            addNode(flowPosition, "right");
+          } else {
+            addNode(flowPosition, "both");
+          }
         }
       }
     },
-    [screenToFlowPosition]
+    [screenToFlowPosition, leftPressed, rightPressed]
   );
 
   // Save flow with user-provided name

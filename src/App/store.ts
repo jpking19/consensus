@@ -37,7 +37,7 @@ export type RFState = {
   ) => void;
   updateNodeParentSupport: (nodeId: string, supportsParent: boolean) => void;
   updateNodeChildPosition: (nodeId: string, currentWidth: number) => void;
-  addNode: (position: XYPosition) => void;
+  addNode: (position: XYPosition, user: "left" | "right" | "both") => void;
   addChildNode: (
     parentNode: InternalNode,
     position: XYPosition,
@@ -224,18 +224,18 @@ const useStore = create<RFState>((set, get) => ({
       }),
     });
   },
-  addNode: (position: XYPosition) => {
+  addNode: (position: XYPosition, user: "left" | "right" | "both") => {
     const newNode: BeliefNode = {
       id: nanoid(),
       type: "belief",
       data: {
         label: "",
         placeholderLabel: "What do you believe?",
-        user: "both", // Indicates this belief is shared by both users
+        user: user,
         supportsParent: true, // Initially has no parent
         alignsWithParent: true, // Initially has no parent
-        leftAcceptance: false,
-        rightAcceptance: false,
+        leftAcceptance: user === "left" ? true : false,
+        rightAcceptance: user === "right" ? true : false,
       },
       position,
     };
