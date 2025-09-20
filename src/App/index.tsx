@@ -188,6 +188,12 @@ function Flow() {
           "data-handleId"
         );
 
+        if (connectingNodeId.current === parentNodeId) {
+          console.error("Cannot connect node to itself");
+          // TODO probably show some stronger visual feedback here
+          return;
+        }
+
         if (childNode && parentNode && targetHandleId) {
           addEdge(childNode, parentNode, targetHandleId);
         }
