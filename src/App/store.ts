@@ -290,7 +290,6 @@ const useStore = create<RFState>((set, get) => ({
         target: newNode.id,
         source: parentNode.id,
         sourceHandle: parentHandleId,
-        animated: true, // TODO do we need this?
       };
 
       set({
@@ -332,7 +331,6 @@ const useStore = create<RFState>((set, get) => ({
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === childNode.id) {
-          console.log("Child node position", node.position.x);
           return {
             ...node,
             parentId: newNode.id,
@@ -343,6 +341,13 @@ const useStore = create<RFState>((set, get) => ({
                 node.position.x -
                 (newNode.position.x - (node.measured?.width / 2 || 0) - 11.75),
               y: node.position.y - newNode.position.y,
+            },
+            data: {
+              ...node.data,
+              // The child node is now claimed by the user asserting the new parent node
+              user: user,
+              supportsParent: true,
+              alignsWithParent: true,
             },
           };
         }
@@ -383,7 +388,6 @@ const useStore = create<RFState>((set, get) => ({
       target: childNode.id,
       source: newNode.id,
       sourceHandle: parentHandleId,
-      animated: true, // TODO do we need this?
     };
 
     set({

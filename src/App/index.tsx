@@ -202,8 +202,6 @@ function Flow() {
 
   const onClick = useCallback(
     (event: React.MouseEvent) => {
-      console.log("Click event", event);
-      console.log("Left pressed:", leftPressed, "Right pressed:", rightPressed);
       if (event.ctrlKey || leftPressed || rightPressed) {
         const { clientX, clientY } = event;
         const targetIsPane = (event.target as Element).classList.contains(
