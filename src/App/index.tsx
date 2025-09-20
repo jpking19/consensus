@@ -145,6 +145,15 @@ function Flow() {
           const user = (childNode.data as BeliefNode["data"]).connectingUser;
           if (connectingHandleId.current.includes("root")) {
             console.error("Cannot connect from root support handle");
+            // TODO probably show some stronger visual feedback here
+            return;
+          }
+
+          if (childNode?.parentId) {
+            console.error(
+              "Cannot add parent to node that already has a parent"
+            );
+            // TODO probably show some stronger visual feedback here
             return;
           }
 

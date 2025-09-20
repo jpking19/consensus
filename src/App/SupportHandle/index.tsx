@@ -32,9 +32,8 @@ export function SupportHandle({
   let backgroundColor = ColorScheme.consensusNone;
   let borderColor = ColorScheme.unaligned;
 
-  if (hovered && !parentId) {
+  if (hovered) {
     backgroundColor = "#fff";
-    // borderColor = "#fff";
   } else if (leftAcceptance && rightAcceptance) {
     if (supportsParent) {
       backgroundColor = ColorScheme.consensus;
@@ -64,7 +63,6 @@ export function SupportHandle({
       onClick={(event) => {
         handleNodeParentSupportChange(event);
       }}
-      isConnectable={!parentId}
       isConnectableEnd={false}
       style={{
         background: backgroundColor,

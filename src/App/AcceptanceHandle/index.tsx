@@ -30,7 +30,6 @@ export function AcceptanceHandle({
 
   if (hovered) {
     backgroundColor = "#fff";
-    // borderColor = "#fff";
   } else if (userAcceptance && oppositeUserAcceptance) {
     if (supportsParent) {
       backgroundColor = ColorScheme.consensus;
