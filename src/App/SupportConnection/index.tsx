@@ -42,8 +42,7 @@ export default ({ fromX, fromY, toX, toY }) => {
           }
           opacity={nodeData?.connectingUser ? 1 : 0.5}
           strokeWidth={1.5}
-          className="animated" // TODO not animated when not connectingUser
-          style={{ animationDirection: "reverse" }}
+          className={nodeData?.connectingUser ? "animated" : ""}
           d={edgePath}
         />
         <circle
@@ -76,7 +75,11 @@ export default ({ fromX, fromY, toX, toY }) => {
       <g>
         <path
           fill="none"
-          stroke={"white"}
+          stroke={
+            nodeData?.connectingUser === "left"
+              ? ColorScheme.leftUser
+              : ColorScheme.rightUser
+          }
           opacity={1}
           strokeWidth={1.5}
           className="animated"

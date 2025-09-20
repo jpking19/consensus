@@ -423,6 +423,17 @@ const useStore = create<RFState>((set, get) => ({
               x: node.position.x - parentNode.internals.positionAbsolute.x,
               y: node.position.y - parentNode.internals.positionAbsolute.y,
             },
+            data: {
+              ...node.data,
+              // The child node is now claimed by the user asserting the new parent node
+              user: parentHandleId?.includes("left")
+                ? "left"
+                : parentHandleId?.includes("right")
+                ? "right"
+                : "both",
+              supportsParent: true,
+              alignsWithParent: true,
+            },
           };
         }
         return node;

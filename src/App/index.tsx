@@ -143,6 +143,11 @@ function Flow() {
           // Check if user has pressed left or right arrow key
           const childNode = nodeLookup.get(connectingNodeId.current);
           const user = (childNode.data as BeliefNode["data"]).connectingUser;
+          if (connectingHandleId.current.includes("root")) {
+            console.error("Cannot connect from root support handle");
+            return;
+          }
+
           if (!user) {
             console.error("No user specified for adding parent node");
             // TODO probably show some stronger visual feedback here
