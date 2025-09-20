@@ -33,7 +33,7 @@ body,
   direction: ltr;
   --xy-edge-stroke-default: #b1b1b7;
   --xy-edge-stroke-width-default: 1;
-  --xy-edge-stroke-selected-default: #555;
+  --xy-edge-stroke-selected-default: #fff;
   --xy-connectionline-stroke-default: #b1b1b7;
   --xy-connectionline-stroke-width-default: 1;
   --xy-attribution-background-color-default: rgba(255, 255, 255, 0.5);
@@ -77,7 +77,7 @@ body,
 .react-flow.dark {
   --xy-edge-stroke-default: #3e3e3e;
   --xy-edge-stroke-width-default: 1;
-  --xy-edge-stroke-selected-default: #727272;
+  --xy-edge-stroke-selected-default: #fff;
   --xy-connectionline-stroke-default: #b1b1b7;
   --xy-connectionline-stroke-width-default: 1;
   --xy-attribution-background-color-default: rgba(150, 150, 150, 0.25);
@@ -219,12 +219,10 @@ body,
 }
 
 .react-flow__edge.selected .react-flow__edge-path,
-.react-flow__edge.selectable:focus .react-flow__edge-path,
-.react-flow__edge.selectable:focus-visible .react-flow__edge-path {
-  stroke: var(
-    --xy-edge-stroke-selected,
-    var(--xy-edge-stroke-selected-default)
-  );
+.react-flow__edge:focus .react-flow__edge-path,
+.react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: #fff !important;
+  /* You can add other highlight styles here if desired */
 }
 
 .react-flow__edge-textwrapper {

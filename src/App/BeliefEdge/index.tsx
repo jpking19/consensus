@@ -76,7 +76,6 @@ function BeliefEdge({
           !parentNodeData.leftAcceptance
         ) {
           return {
-            strokeDasharray: 5,
             stroke: ColorScheme.consensusDisagree,
           };
         } else if (
@@ -84,7 +83,6 @@ function BeliefEdge({
           !parentNodeData.rightAcceptance
         ) {
           return {
-            strokeDasharray: 5,
             stroke: ColorScheme.consensusDisagree,
           };
         }
