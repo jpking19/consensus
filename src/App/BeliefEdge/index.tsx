@@ -32,9 +32,13 @@ function BeliefEdge({
 
   // Use target node's data to get values for determing edge style
   const edgeStyle = useMemo(() => {
+    let edgeStyle = {
+      zIndex: -2,
+    };
     if (childNodeData && parentNodeData) {
       if (!childNodeData.alignsWithParent) {
         return {
+          ...edgeStyle,
           strokeDasharray: 5,
           stroke: ColorScheme.borderDefault,
         };
@@ -42,10 +46,12 @@ function BeliefEdge({
         if (childNodeData.leftAcceptance && childNodeData.rightAcceptance) {
           if (childNodeData.supportsParent) {
             return {
+              ...edgeStyle,
               stroke: ColorScheme.consensus,
             };
           } else {
             return {
+              ...edgeStyle,
               stroke: ColorScheme.consensusDisagree,
             };
           }
@@ -54,6 +60,7 @@ function BeliefEdge({
           !childNodeData.rightAcceptance
         ) {
           return {
+            ...edgeStyle,
             strokeDasharray: 5,
             stroke: ColorScheme.borderDefault,
           };
@@ -62,6 +69,7 @@ function BeliefEdge({
           parentNodeData.leftAcceptance
         ) {
           return {
+            ...edgeStyle,
             stroke: ColorScheme.leftUser,
           };
         } else if (
@@ -69,6 +77,7 @@ function BeliefEdge({
           parentNodeData.rightAcceptance
         ) {
           return {
+            ...edgeStyle,
             stroke: ColorScheme.rightUser,
           };
         } else if (
@@ -76,6 +85,7 @@ function BeliefEdge({
           !parentNodeData.leftAcceptance
         ) {
           return {
+            ...edgeStyle,
             stroke: ColorScheme.consensusDisagree,
           };
         } else if (
@@ -83,6 +93,7 @@ function BeliefEdge({
           !parentNodeData.rightAcceptance
         ) {
           return {
+            ...edgeStyle,
             stroke: ColorScheme.consensusDisagree,
           };
         }

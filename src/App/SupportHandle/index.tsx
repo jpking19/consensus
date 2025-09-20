@@ -1,5 +1,6 @@
 import { Handle, Position } from "@xyflow/react";
 import { ColorScheme } from "../colors";
+import React, { useState } from "react";
 
 interface SupportHandleProps {
   id: string;
@@ -26,10 +27,15 @@ export function SupportHandle({
   supportsParent,
   handleNodeParentSupportChange,
 }: SupportHandleProps) {
+  const [hovered, setHovered] = useState(false);
+
   let backgroundColor = ColorScheme.consensusNone;
   let borderColor = ColorScheme.unaligned;
 
-  if (leftAcceptance && rightAcceptance) {
+  if (hovered && !parentId) {
+    backgroundColor = "#fff";
+    // borderColor = "#fff";
+  } else if (leftAcceptance && rightAcceptance) {
     if (supportsParent) {
       backgroundColor = ColorScheme.consensus;
       borderColor = ColorScheme.consensus;
@@ -66,6 +72,8 @@ export function SupportHandle({
         top: position === Position.Top && nodeLabel == "" ? "20px" : "",
         opacity: alignsWithParent ? 1 : 0,
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     />
   );
 }

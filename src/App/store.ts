@@ -290,6 +290,7 @@ const useStore = create<RFState>((set, get) => ({
         target: newNode.id,
         source: parentNode.id,
         sourceHandle: parentHandleId,
+        zIndex: -2,
       };
 
       set({
@@ -388,6 +389,7 @@ const useStore = create<RFState>((set, get) => ({
       target: childNode.id,
       source: newNode.id,
       sourceHandle: parentHandleId,
+      zIndex: -2,
     };
 
     set({
@@ -405,6 +407,7 @@ const useStore = create<RFState>((set, get) => ({
       target: childNode.id,
       source: parentNode.id,
       sourceHandle: parentHandleId,
+      zIndex: -2,
     };
 
     set({

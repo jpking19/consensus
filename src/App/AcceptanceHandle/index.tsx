@@ -1,5 +1,6 @@
 import { Handle, Position } from "@xyflow/react";
 import { ColorScheme } from "../colors";
+import React, { useState } from "react";
 
 interface AcceptanceHandleProps {
   id: string;
@@ -22,10 +23,15 @@ export function AcceptanceHandle({
   nodeLabel,
   handleNodeUserAcceptanceChange,
 }: AcceptanceHandleProps) {
+  const [hovered, setHovered] = useState(false);
+
   let backgroundColor = ColorScheme.unaligned;
   let borderColor = ColorScheme.unaligned;
 
-  if (userAcceptance && oppositeUserAcceptance) {
+  if (hovered) {
+    backgroundColor = "#fff";
+    // borderColor = "#fff";
+  } else if (userAcceptance && oppositeUserAcceptance) {
     if (supportsParent) {
       backgroundColor = ColorScheme.consensus;
       borderColor = ColorScheme.consensus;
@@ -62,6 +68,8 @@ export function AcceptanceHandle({
         right: position === Position.Right && nodeLabel == "" ? "20px" : "",
         zIndex: -1,
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     />
   );
 }
