@@ -331,7 +331,7 @@ svg.react-flow__connectionline {
   border-bottom-left-radius: 8px;
   border-top-right-radius: 8px;
   border-bottom-right-radius: 8px;
-  border: 2px solid;
+  border: 1px solid;
   border-color: var(
     --xy-handle-border-color,
     var(--xy-handle-border-color-default)

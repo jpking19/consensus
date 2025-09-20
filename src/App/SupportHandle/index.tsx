@@ -27,17 +27,26 @@ export function SupportHandle({
   handleNodeParentSupportChange,
 }: SupportHandleProps) {
   let backgroundColor = ColorScheme.consensusNone;
+  let borderColor = ColorScheme.unaligned;
+
   if (leftAcceptance && rightAcceptance) {
     if (supportsParent) {
       backgroundColor = ColorScheme.consensus;
+      borderColor = ColorScheme.consensus;
     } else if (!supportsParent) {
       backgroundColor = ColorScheme.consensusDisagree;
+      borderColor = ColorScheme.consensusDisagree;
     }
-  } else if (supportsParent) {
-    backgroundColor =
-      user === "left" ? ColorScheme.leftUser : ColorScheme.rightUser;
-  } else {
-    backgroundColor = ColorScheme.consensusDisagree;
+  } else if (parentId) {
+    if (supportsParent && user != "both") {
+      backgroundColor =
+        user === "left" ? ColorScheme.leftUser : ColorScheme.rightUser;
+      borderColor =
+        user === "left" ? ColorScheme.leftUser : ColorScheme.rightUser;
+    } else {
+      backgroundColor = ColorScheme.consensusDisagree;
+      borderColor = ColorScheme.consensusDisagree;
+    }
   }
 
   return (
@@ -53,6 +62,7 @@ export function SupportHandle({
       isConnectableEnd={false}
       style={{
         background: backgroundColor,
+        borderColor: borderColor,
         top: position === Position.Top && nodeLabel == "" ? "20px" : "",
         opacity: alignsWithParent ? 1 : 0,
       }}

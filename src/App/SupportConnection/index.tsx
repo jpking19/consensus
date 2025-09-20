@@ -4,6 +4,7 @@ import {
   useStore,
   getBezierPath,
 } from "@xyflow/react";
+import { ColorScheme } from "../colors";
 
 export default ({ fromX, fromY, toX, toY }) => {
   const { fromHandle, fromNode } = useConnection();
@@ -32,7 +33,13 @@ export default ({ fromX, fromY, toX, toY }) => {
       <g>
         <path
           fill="none"
-          stroke={nodeData?.connectingUser ? "green" : "red"}
+          stroke={
+            nodeData?.connectingUser
+              ? nodeData?.connectingUser === "left"
+                ? ColorScheme.leftUser
+                : ColorScheme.rightUser
+              : ColorScheme.consensusDisagree
+          }
           opacity={nodeData?.connectingUser ? 1 : 0.5}
           strokeWidth={1.5}
           className="animated" // TODO not animated when not connectingUser
