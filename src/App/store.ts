@@ -15,7 +15,7 @@ import {
 import { create } from "zustand";
 import { nanoid } from "nanoid/non-secure";
 
-import type { BeliefNode, BeliefEdge } from "./types";
+import type { BeliefNode, BeliefEdge, NodeData } from "./types";
 
 export type RFState = {
   nodes: BeliefNode[];
@@ -54,6 +54,8 @@ export type RFState = {
     nodeId: string,
     user: "left" | "right" | "both" | null
   ) => void;
+  collapseNodeBeliefs: (nodeId: string) => void;
+  restoreNodeBeliefs: (nodeId: string) => void;
 };
 
 const useStore = create<RFState>((set, get) => ({
@@ -600,6 +602,105 @@ const useStore = create<RFState>((set, get) => ({
         return node;
       }),
     }),
+  collapseNodeBeliefs: (nodeId: string) => {
+    let collapsedNodes: BeliefNode[] = [];
+    let collapsedNodeData: BeliefNode | undefined;
+    const collapseChildren = (parentNode: BeliefNode) => {
+      let newParentNode = parentNode;
+      get().nodes.forEach((child) => {
+        if (child.parentId === parentNode.id) {
+          collapsedNodes.push(child);
+          let newChildNode = collapseChildren(child);
+          newParentNode = {
+            ...parentNode,
+            data: {
+              ...parentNode.data,
+              collapsedChildren: [
+                ...(newParentNode.data.collapsedChildren || []),
+                {
+                  ...child,
+                  data: {
+                    ...child.data,
+                    collapsedChildren:
+                      newChildNode.data.collapsedChildren || [],
+                  },
+                },
+              ],
+            },
+          };
+        }
+      });
+      return newParentNode;
+    };
+
+    // Iterate over all Nodes recursively to find all child nodes, and add them to the collapsedNodeData
+    set({
+      nodes: get()
+        .nodes.map((node) => {
+          if (node.id === nodeId) {
+            collapsedNodeData = collapseChildren(node);
+            // it's important to create a new node here, to inform React Flow about the changes
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                collapsed: true,
+                collapsedChildren:
+                  collapsedNodeData?.data.collapsedChildren || [],
+              },
+            };
+          }
+          return node;
+        })
+        // Remove all collapsed nodes from the main nodes array
+        .filter((node) => !collapsedNodes.includes(node)),
+    });
+  },
+  restoreNodeBeliefs: (nodeId: string) => {
+    let nodesToRestore: BeliefNode[] = [];
+
+    const restoreChildren = (parent: BeliefNode) => {
+      parent.data.collapsedChildren?.forEach((child) => {
+        if (!child.data.collapsed) {
+          const restoredChildNode: BeliefNode = {
+            ...child,
+            data: {
+              ...child.data,
+              collapsedChildren: [],
+            },
+          };
+          // Need to push the parent node before the child node
+          nodesToRestore.push(restoredChildNode);
+          restoreChildren(child);
+        } else {
+          // If the child node is collapsed, we need to restore it as is, and not restore its children
+          nodesToRestore.push(child);
+        }
+      });
+    };
+
+    const nodeToRestore = get().nodes.find((n) => n.id === nodeId);
+    if (nodeToRestore) {
+      restoreChildren(nodeToRestore);
+    }
+
+    set({
+      nodes: get()
+        .nodes.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                collapsedChildren: [],
+              },
+            };
+          }
+          return node;
+        })
+        .concat(...nodesToRestore),
+    });
+  },
 }));
 
 export default useStore;

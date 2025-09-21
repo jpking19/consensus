@@ -1,5 +1,6 @@
 import { useLayoutEffect, useEffect, useRef } from "react";
 import { Handle, Position, NodeToolbar } from "@xyflow/react";
+import { NodeAppendix } from "@/components/node-appendix";
 import type { NodeProps } from "@xyflow/react";
 
 import useStore from "../store";
@@ -191,6 +192,21 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         nodeLabel={data.label}
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
       />
+      <NodeAppendix position="bottom">
+        <button
+          type="button"
+          className="px-2 py-1 bg-gray-200 rounded text-xs hover:bg-gray-300"
+          onClick={() => {
+            if (data.collapsedChildren?.length !== 0) {
+              useStore.getState().restoreNodeBeliefs(id);
+            } else {
+              useStore.getState().collapseNodeBeliefs(id);
+            }
+          }}
+        >
+          Collapse Beliefs
+        </button>
+      </NodeAppendix>
     </>
   );
 }

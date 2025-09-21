@@ -11,6 +11,8 @@ export type NodeData = {
   leftAcceptance: boolean; // Indicates if the left user accepts this belief
   rightAcceptance: boolean; // Indicates if the right user accepts this belief
   origin?: [number, number]; // This is used to place the node origin in the
+  collapsed: boolean; // Indicates if the node's children are collapsed
+  collapsedChildren?: BeliefNode[]; // This is used to store collapsed child nodes
 };
 
 // Currently, all data needed by Edges is contained in the NodeData.
