@@ -783,6 +783,8 @@ const useStore = create<RFState>((set, get) => ({
 
           return {
             ...stateToRestore,
+            // We want the node to keep the same ID and position
+            position: node.position,
             data: {
               ...stateToRestore.data,
               states: newStates,

@@ -207,7 +207,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
             left: "0px",
             display: "flex",
             flexDirection: "row",
-            justifyContent: "flex-start",
+            justifyContent: "flex",
             alignItems: "center",
             transition: "top 0.2s, color 0.2s",
           }}
@@ -230,14 +230,19 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
                     flex: 1,
                     margin: "0",
                     background: ColorScheme.consensusNone,
-                    color: ColorScheme.unaligned,
+                    color:
+                      nodeData.stateIndex === data.stateIndex
+                        ? ColorScheme.textDefault
+                        : ColorScheme.unaligned,
                     borderColor:
                       nodeData.stateIndex === data.stateIndex
                         ? ColorScheme.textDefault
                         : ColorScheme.unaligned,
                     borderWidth: "1px",
-                    borderStyle: "solid",
-                    // borderLeft: idx === 0 ? undefined : "none",
+                    borderStyle:
+                      nodeData.stateIndex === data.stateIndex && data.collapsed
+                        ? "dashed"
+                        : "solid",
                     borderRadius,
                     height: "14px",
                     fontSize: "8px",
