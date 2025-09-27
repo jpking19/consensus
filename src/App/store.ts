@@ -56,6 +56,8 @@ export type RFState = {
   ) => void;
   collapseNodeBeliefs: (nodeId: string) => void;
   restoreNodeBeliefs: (nodeId: string) => void;
+  addNodeState: (nodeId: string) => void;
+  setNodeState: (nodeId: string, stateIndex: number) => void;
 };
 
 const useStore = create<RFState>((set, get) => ({
@@ -71,6 +73,9 @@ const useStore = create<RFState>((set, get) => ({
         alignsWithParent: true,
         leftAcceptance: false,
         rightAcceptance: false,
+        collapsed: false,
+        stateIndex: 0,
+        states: [],
       },
       position: { x: 0, y: 0 },
     },
@@ -238,6 +243,9 @@ const useStore = create<RFState>((set, get) => ({
         alignsWithParent: true, // Initially has no parent
         leftAcceptance: user === "left" ? true : false,
         rightAcceptance: user === "right" ? true : false,
+        collapsed: false,
+        states: [],
+        stateIndex: 0,
       },
       position,
     };
@@ -273,6 +281,9 @@ const useStore = create<RFState>((set, get) => ({
         // User who creates belief will always accept it until manually changed
         leftAcceptance: user === "left" ? true : false,
         rightAcceptance: user === "right" ? true : false,
+        collapsed: false,
+        states: [],
+        stateIndex: 0,
       },
       position: {
         x: position.x - parentAbsolutePosition.x,
@@ -317,6 +328,9 @@ const useStore = create<RFState>((set, get) => ({
         // User who creates belief will always accept it until manually changed
         leftAcceptance: user === "left" ? true : false,
         rightAcceptance: user === "right" ? true : false,
+        collapsed: false,
+        states: [],
+        stateIndex: 0,
       },
       position: {
         x: position.x,
@@ -655,6 +669,7 @@ const useStore = create<RFState>((set, get) => ({
         // Remove all collapsed nodes from the main nodes array
         .filter((node) => !collapsedNodes.includes(node)),
     });
+    // TODO do we need to do anything with edges here?
   },
   restoreNodeBeliefs: (nodeId: string) => {
     let nodesToRestore: BeliefNode[] = [];
@@ -702,6 +717,84 @@ const useStore = create<RFState>((set, get) => ({
         })
         .concat(...nodesToRestore),
     });
+  },
+  addNodeState: (nodeId: string) => {
+    // Collapse the current state's beliefs
+    get().collapseNodeBeliefs(nodeId);
+
+    // Find node by ID and add current state to its states array under its stateIndex,
+    // and set its stateIndex to the latest state
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id === nodeId) {
+          const newStates = node.data.states ? [...node.data.states] : [];
+          // Add the current state to the states array
+          newStates.push({
+            ...node,
+            data: {
+              ...node.data,
+              stateIndex: node.data.stateIndex,
+              states: [], // We don't want to store states of states
+            },
+          });
+          newStates.sort(
+            (a, b) => (a.data.stateIndex || 0) - (b.data.stateIndex || 0)
+          );
+          // Create a new node with the updated states and stateIndex
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              // When creating a new state, we reset acceptance states for both users
+              leftAcceptance: false,
+              rightAcceptance: false,
+              collapsedChildren: [], // Clear collapsed children when adding a new state
+              stateIndex: newStates.length, // Set to the latest state
+              states: newStates,
+            },
+          };
+        }
+        return node;
+      }),
+    });
+  },
+  setNodeState: (nodeId: string, stateIndex: number) => {
+    // Collapse the current state's beliefs
+    get().collapseNodeBeliefs(nodeId);
+
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id === nodeId) {
+          // Switch node's attritubtes to the selected state
+          const stateToRestore = node.data.states?.find(
+            (s) => s.data.stateIndex === stateIndex
+          );
+          let newStates = node.data.states ? [...node.data.states] : [];
+          // Remove the restored state from the states array
+          newStates = newStates.filter((s) => s.data.stateIndex !== stateIndex);
+          // Add the current state to the states array
+          newStates.push({
+            ...node,
+            data: {
+              ...node.data,
+              states: [], // We don't want to store states of states
+            },
+          });
+
+          return {
+            ...stateToRestore,
+            data: {
+              ...stateToRestore.data,
+              states: newStates,
+            },
+          };
+        }
+        return node;
+      }),
+    });
+
+    // Expand the new state's collapsed beliefs
+    get().restoreNodeBeliefs(nodeId);
   },
 }));
 

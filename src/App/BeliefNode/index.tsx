@@ -10,6 +10,7 @@ import { SupportHandle } from "../SupportHandle";
 import { ColorScheme } from "../colors";
 
 import TextareaAutosize from "react-textarea-autosize";
+import BeliefEdge from "../BeliefEdge";
 
 function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -25,6 +26,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
   const updateNodeParentSupport = useStore(
     (state) => state.updateNodeParentSupport
   );
+  const addNodeState = useStore((state) => state.addNodeState);
 
   const handleNodeUserAcceptanceChange = (e: React.MouseEvent) => {
     if ((e.target as Element).classList.contains("left-acceptance-handle")) {
@@ -210,44 +212,96 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
             transition: "top 0.2s, color 0.2s",
           }}
         >
-          {[0, 1, 2].map((i, idx, arr) => {
-            // We style the buttons to look like a connected group
-            let borderRadius = "0";
-            if (idx === 0) borderRadius = "3px 0 0 3px";
-            else if (idx === arr.length - 1) borderRadius = "0 3px 3px 0";
-            // else middle stays 0
-            return (
-              <button
-                key={i}
-                type="button"
-                style={{
-                  flex: 1,
-                  margin: "0",
-                  background: ColorScheme.consensusNone,
-                  border: `1px solid ${ColorScheme.unaligned}`,
-                  borderLeft: idx === 0 ? undefined : "none",
-                  borderRadius,
-                  height: "14px",
-                  fontSize: "8px",
-                  color: ColorScheme.unaligned,
-                  transition: "background 0.2s, color 0.2s",
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  if (data.collapsed) {
-                    useStore.getState().restoreNodeBeliefs(id);
-                  } else {
-                    useStore.getState().collapseNodeBeliefs(id);
-                  }
-                }}
-                onFocus={() => {
-                  setIsFocused(true);
-                }}
-              >
-                {i + 1}
-              </button>
-            );
-          })}
+          {data.states
+            .map((nodeState) => nodeState.data)
+            ?.concat(data)
+            .sort((a, b) => a.stateIndex - b.stateIndex)
+            .map((nodeData, idx, arr) => {
+              // We style the buttons to look like a connected group
+              let borderRadius = "0";
+              if (idx === 0) borderRadius = "3px 0 0 3px";
+              // else middle stays 0
+              return (
+                <button
+                  key={nodeData.stateIndex}
+                  type="button"
+                  style={{
+                    zIndex: nodeData.stateIndex === data.stateIndex ? -2 : -3,
+                    flex: 1,
+                    margin: "0",
+                    background: ColorScheme.consensusNone,
+                    color: ColorScheme.unaligned,
+                    borderColor:
+                      nodeData.stateIndex === data.stateIndex
+                        ? ColorScheme.textDefault
+                        : ColorScheme.unaligned,
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                    // borderLeft: idx === 0 ? undefined : "none",
+                    borderRadius,
+                    height: "14px",
+                    fontSize: "8px",
+                    transition: "background 0.2s, color 0.2s",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    if (nodeData.stateIndex === data.stateIndex) {
+                      if (data.collapsed) {
+                        useStore.getState().restoreNodeBeliefs(id);
+                      } else {
+                        useStore.getState().collapseNodeBeliefs(id);
+                      }
+                    } else {
+                      useStore.getState().setNodeState(id, nodeData.stateIndex);
+                      // Focus the text area after a short delay
+                      setTimeout(() => {
+                        if (textAreaRef.current) {
+                          textAreaRef.current.focus({ preventScroll: true });
+                          setIsFocused(true);
+                        }
+                      }, 50);
+                    }
+                  }}
+                  onFocus={() => {
+                    setIsFocused(true);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      if (textAreaRef.current) {
+                        textAreaRef.current.focus({ preventScroll: true });
+                      }
+                    }, 50);
+                  }}
+                >
+                  {nodeData.stateIndex + 1}
+                </button>
+              );
+            })}
+          <button
+            key={data.states?.length + 2}
+            type="button"
+            style={{
+              flex: 1,
+              margin: "0",
+              background: ColorScheme.consensusNone,
+              border: `1px solid ${ColorScheme.unaligned}`,
+              borderLeft: "none",
+              borderRadius: "0 3px 3px 0",
+              height: "14px",
+              fontSize: "10px",
+              color: ColorScheme.unaligned,
+              transition: "background 0.2s, color 0.2s",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              addNodeState(id);
+            }}
+            onFocus={() => {
+              setIsFocused(true);
+            }}
+          >
+            +
+          </button>
         </div>
       </NodeAppendix>
     </>

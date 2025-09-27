@@ -1,3 +1,4 @@
+import type Belief from "@/components/Belief";
 import { type Node, type Edge } from "@xyflow/react";
 
 export type NodeData = {
@@ -13,6 +14,8 @@ export type NodeData = {
   origin?: [number, number]; // This is used to place the node origin in the
   collapsed: boolean; // Indicates if the node's children are collapsed
   collapsedChildren?: BeliefNode[]; // This is used to store collapsed child nodes
+  stateIndex?: number; // This is used to track the current state index in the states array
+  states?: BeliefNode[]; // This is used to store different states of the belief for versioning
 };
 
 // Currently, all data needed by Edges is contained in the NodeData.
