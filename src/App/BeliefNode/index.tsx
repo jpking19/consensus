@@ -1,4 +1,4 @@
-import { useLayoutEffect, useEffect, useRef } from "react";
+import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import { Handle, Position, NodeToolbar } from "@xyflow/react";
 import { NodeAppendix } from "@/components/node-appendix";
 import type { NodeProps } from "@xyflow/react";
@@ -13,7 +13,8 @@ import TextareaAutosize from "react-textarea-autosize";
 
 function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const editingRef = useRef<Boolean>(true);
+  const appendixRef = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const updateNodeLabel = useStore((state) => state.updateNodeLabel);
   const updateNodeChildrenPosition = useStore(
     (state) => state.updateNodeChildPosition
@@ -133,6 +134,8 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         <TextareaAutosize
           className={"react-flow__node-input"}
           value={data.label}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
             // If the label has changed, and the node's acceptance needs to change,
             // we reset the acceptance states and the children's support states
@@ -193,19 +196,59 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
       />
       <NodeAppendix position="bottom">
-        <button
-          type="button"
-          className="px-2 py-1 bg-gray-200 rounded text-xs hover:bg-gray-300"
-          onClick={() => {
-            if (data.collapsedChildren?.length !== 0) {
-              useStore.getState().restoreNodeBeliefs(id);
-            } else {
-              useStore.getState().collapseNodeBeliefs(id);
-            }
+        <div
+          ref={appendixRef}
+          style={{
+            zIndex: -3,
+            position: "absolute",
+            top: isFocused ? "0px" : "-20px",
+            left: "0px",
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            transition: "top 0.2s, color 0.2s",
           }}
         >
-          Collapse Beliefs
-        </button>
+          {[0, 1, 2].map((i, idx, arr) => {
+            // We style the buttons to look like a connected group
+            let borderRadius = "0";
+            if (idx === 0) borderRadius = "3px 0 0 3px";
+            else if (idx === arr.length - 1) borderRadius = "0 3px 3px 0";
+            // else middle stays 0
+            return (
+              <button
+                key={i}
+                type="button"
+                style={{
+                  flex: 1,
+                  margin: "0",
+                  background: ColorScheme.consensusNone,
+                  border: `1px solid ${ColorScheme.unaligned}`,
+                  borderLeft: idx === 0 ? undefined : "none",
+                  borderRadius,
+                  height: "14px",
+                  fontSize: "8px",
+                  color: ColorScheme.unaligned,
+                  transition: "background 0.2s, color 0.2s",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  if (data.collapsed) {
+                    useStore.getState().restoreNodeBeliefs(id);
+                  } else {
+                    useStore.getState().collapseNodeBeliefs(id);
+                  }
+                }}
+                onFocus={() => {
+                  setIsFocused(true);
+                }}
+              >
+                {i + 1}
+              </button>
+            );
+          })}
+        </div>
       </NodeAppendix>
     </>
   );

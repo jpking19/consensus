@@ -666,6 +666,7 @@ const useStore = create<RFState>((set, get) => ({
             ...child,
             data: {
               ...child.data,
+              collapsed: false,
               collapsedChildren: [],
             },
           };
@@ -692,6 +693,7 @@ const useStore = create<RFState>((set, get) => ({
               ...node,
               data: {
                 ...node.data,
+                collapsed: false,
                 collapsedChildren: [],
               },
             };
