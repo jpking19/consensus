@@ -197,14 +197,17 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
         nodeLabel={data.label}
         handleNodeUserAcceptanceChange={handleNodeUserAcceptanceChange}
       />
-      <NodeAppendix position="bottom">
+      <NodeAppendix
+        position="bottom"
+        style={{ alignItems: "center", left: "50%", justifyContent: "center" }}
+      >
         <div
           ref={appendixRef}
           style={{
             zIndex: -3,
             position: "absolute",
+            opacity: data.alignsWithParent ? 1 : 0,
             top: isFocused ? "0px" : "-20px",
-            left: "0px",
             display: "flex",
             flexDirection: "row",
             justifyContent: "flex",
@@ -216,7 +219,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
             .map((nodeState) => nodeState.data)
             ?.concat(data)
             .sort((a, b) => a.stateIndex - b.stateIndex)
-            .map((nodeData, idx, arr) => {
+            .map((nodeData, idx) => {
               // We style the buttons to look like a connected group
               let borderRadius = "0";
               if (idx === 0) borderRadius = "3px 0 0 3px";

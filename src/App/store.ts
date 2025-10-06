@@ -673,9 +673,15 @@ const useStore = create<RFState>((set, get) => ({
   },
   restoreNodeBeliefs: (nodeId: string) => {
     let nodesToRestore: BeliefNode[] = [];
-
-    const restoreChildren = (parent: BeliefNode) => {
+    let nodeActualPositions = new Map<string, XYPosition>();
+    const restoreChildren = (
+      parent: BeliefNode,
+      widthToApply: number,
+      level: number
+    ) => {
       parent.data.collapsedChildren?.forEach((child) => {
+        // 11.5 if the default offset for handle + padding, and 154 is half the default width of a node
+        let nextWidthToApply = 11.5 - (child.measured?.width - 154) / 2;
         if (!child.data.collapsed) {
           const restoredChildNode: BeliefNode = {
             ...child,
@@ -684,10 +690,15 @@ const useStore = create<RFState>((set, get) => ({
               collapsed: false,
               collapsedChildren: [],
             },
+            // Need to update the position of the child node based on the width of its parent node
+            position: {
+              x: child.position.x + widthToApply,
+              y: child.position.y,
+            },
           };
           // Need to push the parent node before the child node
           nodesToRestore.push(restoredChildNode);
-          restoreChildren(child);
+          restoreChildren(child, nextWidthToApply, level + 1);
         } else {
           // If the child node is collapsed, we need to restore it as is, and not restore its children
           nodesToRestore.push(child);
@@ -697,12 +708,13 @@ const useStore = create<RFState>((set, get) => ({
 
     const nodeToRestore = get().nodes.find((n) => n.id === nodeId);
     if (nodeToRestore) {
-      restoreChildren(nodeToRestore);
+      // The first child node needs to be restored at its actual position (no adjustment for parent width)
+      restoreChildren(nodeToRestore, 0, 0);
     }
 
     set({
-      nodes: get()
-        .nodes.map((node) => {
+      nodes: [
+        ...get().nodes.map((node) => {
           if (node.id === nodeId) {
             return {
               ...node,
@@ -714,9 +726,12 @@ const useStore = create<RFState>((set, get) => ({
             };
           }
           return node;
-        })
-        .concat(...nodesToRestore),
+        }),
+        ...nodesToRestore,
+      ],
     });
+
+    return nodeActualPositions;
   },
   addNodeState: (nodeId: string) => {
     // Collapse the current state's beliefs
@@ -748,6 +763,7 @@ const useStore = create<RFState>((set, get) => ({
               // When creating a new state, we reset acceptance states for both users
               leftAcceptance: false,
               rightAcceptance: false,
+              collapsed: false,
               collapsedChildren: [], // Clear collapsed children when adding a new state
               stateIndex: newStates.length, // Set to the latest state
               states: newStates,
