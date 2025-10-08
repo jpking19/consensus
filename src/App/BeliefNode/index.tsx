@@ -255,7 +255,7 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
                   onClick={() => {
                     if (nodeData.stateIndex === data.stateIndex) {
                       if (data.collapsed) {
-                        useStore.getState().restoreNodeBeliefs(id);
+                        useStore.getState().restoreNodeBeliefs(id, false);
                       } else {
                         useStore.getState().collapseNodeBeliefs(id);
                       }

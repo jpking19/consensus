@@ -55,7 +55,7 @@ export type RFState = {
     user: "left" | "right" | "both" | null
   ) => void;
   collapseNodeBeliefs: (nodeId: string) => void;
-  restoreNodeBeliefs: (nodeId: string) => void;
+  restoreNodeBeliefs: (nodeId: string, adjustFirstChildren: boolean) => void;
   addNodeState: (nodeId: string) => void;
   setNodeState: (nodeId: string, stateIndex: number) => void;
 };
@@ -303,7 +303,6 @@ const useStore = create<RFState>((set, get) => ({
         target: newNode.id,
         source: parentNode.id,
         sourceHandle: parentHandleId,
-        zIndex: -2,
       };
 
       set({
@@ -405,7 +404,6 @@ const useStore = create<RFState>((set, get) => ({
       target: childNode.id,
       source: newNode.id,
       sourceHandle: parentHandleId,
-      zIndex: -2,
     };
 
     set({
@@ -423,7 +421,6 @@ const useStore = create<RFState>((set, get) => ({
       target: childNode.id,
       source: parentNode.id,
       sourceHandle: parentHandleId,
-      zIndex: -2,
     };
 
     set({
@@ -671,7 +668,7 @@ const useStore = create<RFState>((set, get) => ({
     });
     // TODO do we need to do anything with edges here?
   },
-  restoreNodeBeliefs: (nodeId: string) => {
+  restoreNodeBeliefs: (nodeId: string, adjustFirstChildren: boolean) => {
     let nodesToRestore: BeliefNode[] = [];
     let nodeActualPositions = new Map<string, XYPosition>();
     const restoreChildren = (
@@ -708,8 +705,15 @@ const useStore = create<RFState>((set, get) => ({
 
     const nodeToRestore = get().nodes.find((n) => n.id === nodeId);
     if (nodeToRestore) {
-      // The first child node needs to be restored at its actual position (no adjustment for parent width)
-      restoreChildren(nodeToRestore, 0, 0);
+      if (adjustFirstChildren) {
+        // The first child node needs to be restored with an adjustment for the parent width when switching
+        // states, but with no padding for the handle
+        let nextWidthToApply = -(nodeToRestore.measured?.width - 154) / 2;
+        restoreChildren(nodeToRestore, nextWidthToApply, 0);
+      } else {
+        // The first child node needs to be restored at its actual position (no adjustment for parent width)
+        restoreChildren(nodeToRestore, 0, 0);
+      }
     }
 
     set({
@@ -785,6 +789,14 @@ const useStore = create<RFState>((set, get) => ({
           const stateToRestore = node.data.states?.find(
             (s) => s.data.stateIndex === stateIndex
           );
+
+          if (!stateToRestore) {
+            console.error(
+              `State with index ${stateIndex} not found for node ${nodeId}`
+            );
+            return node;
+          }
+
           let newStates = node.data.states ? [...node.data.states] : [];
           // Remove the restored state from the states array
           newStates = newStates.filter((s) => s.data.stateIndex !== stateIndex);
@@ -812,7 +824,7 @@ const useStore = create<RFState>((set, get) => ({
     });
 
     // Expand the new state's collapsed beliefs
-    get().restoreNodeBeliefs(nodeId);
+    get().restoreNodeBeliefs(nodeId, true);
   },
 }));
 
