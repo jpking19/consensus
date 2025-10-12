@@ -4,30 +4,25 @@ import "../../index.css"; // Import the CSS for styling
 import type { BeliefEdge } from "../types";
 import { useMemo } from "react";
 import { ColorScheme } from "../colors";
+import { Button } from "@/components/ui/button";
+import { MousePointerClick } from "lucide-react";
+import { ButtonEdge } from "@/components/button-edge";
+import { default as useStoreOriginal } from "../store";
 
-function BeliefEdge({
-  id,
-  source,
-  target,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-}: EdgeProps<BeliefEdge>) {
-  const childNodeData = useStore((state) => state.nodeLookup.get(target)?.data);
+function BeliefEdge(props: EdgeProps<BeliefEdge>) {
+  const childNode = useStore((state) => state.nodeLookup.get(props.target));
+  const childNodeData = childNode?.data;
   const parentNodeData = useStore(
-    (state) => state.nodeLookup.get(source)?.data
+    (state) => state.nodeLookup.get(props.source)?.data
   );
 
   const [edgePath] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition: sourcePosition,
-    targetPosition: targetPosition,
+    sourceX: props.sourceX,
+    sourceY: props.sourceY,
+    targetX: props.targetX,
+    targetY: props.targetY,
+    sourcePosition: props.sourcePosition,
+    targetPosition: props.targetPosition,
   });
 
   // Use target node's data to get values for determing edge style
@@ -65,7 +60,7 @@ function BeliefEdge({
             stroke: ColorScheme.borderDefault,
           };
         } else if (
-          sourcePosition == Position.Left &&
+          props.sourcePosition == Position.Left &&
           parentNodeData.leftAcceptance
         ) {
           return {
@@ -73,7 +68,7 @@ function BeliefEdge({
             stroke: ColorScheme.leftUser,
           };
         } else if (
-          sourcePosition == Position.Right &&
+          props.sourcePosition == Position.Right &&
           parentNodeData.rightAcceptance
         ) {
           return {
@@ -81,7 +76,7 @@ function BeliefEdge({
             stroke: ColorScheme.rightUser,
           };
         } else if (
-          sourcePosition == Position.Left &&
+          props.sourcePosition == Position.Left &&
           !parentNodeData.leftAcceptance
         ) {
           return {
@@ -89,7 +84,7 @@ function BeliefEdge({
             stroke: ColorScheme.consensusDisagree,
           };
         } else if (
-          sourcePosition == Position.Right &&
+          props.sourcePosition == Position.Right &&
           !parentNodeData.rightAcceptance
         ) {
           return {
@@ -105,12 +100,26 @@ function BeliefEdge({
 
   return (
     <>
-      <BaseEdge
-        id={id}
+      <ButtonEdge
+        {...props}
         className={`react-flow__edge selectable`}
         style={edgeStyle}
-        path={edgePath}
-      />
+        // path={edgePath}
+      >
+        <Button
+          onClick={() =>
+            useStoreOriginal.getState().addIntermediateNode(childNode)
+          }
+          size="sm"
+          variant="default"
+          style={{ marginRight: "8px" }}
+        >
+          {/* <MousePointerClick size={16} /> */}+
+        </Button>
+        <Button size="sm" variant="default">
+          {/* <MousePointerClick size={16} /> */}-
+        </Button>
+      </ButtonEdge>
     </>
   );
 }

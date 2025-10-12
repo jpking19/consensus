@@ -16,6 +16,7 @@ import { create } from "zustand";
 import { nanoid } from "nanoid/non-secure";
 
 import type { BeliefNode, BeliefEdge, NodeData } from "./types";
+import BeliefNode from "./BeliefNode";
 
 export type RFState = {
   nodes: BeliefNode[];
@@ -43,7 +44,13 @@ export type RFState = {
     position: XYPosition,
     parentHandleId: string | null
   ) => void;
-  addParentNode: (childNode: InternalNode, position: XYPosition) => void;
+  addParentNode: (
+    childNode: InternalNode,
+    position: XYPosition,
+    parentId?: string,
+    nodeData?: Partial<NodeData>
+  ) => InternalNode;
+  addIntermediateNode: (childNode: InternalNode) => void;
   addEdge: (
     childNode: InternalNode,
     parentNode: InternalNode,
@@ -310,13 +317,19 @@ const useStore = create<RFState>((set, get) => ({
       });
     }
   },
-  addParentNode: (childNode: InternalNode, position: XYPosition) => {
+  addParentNode: (
+    childNode: InternalNode,
+    position: XYPosition,
+    parentId?: string,
+    nodeData: Partial<NodeData> = {}
+  ) => {
     // Get the user from the child node (this is the user that asserting new belief)
     const user = (childNode.data as BeliefNode["data"]).connectingUser;
 
     // Create new parent node based on the child node's position
     const newNode: BeliefNode = {
       id: nanoid(),
+      parentId: parentId || undefined,
       type: "belief",
       data: {
         label: "",
@@ -330,11 +343,9 @@ const useStore = create<RFState>((set, get) => ({
         collapsed: false,
         states: [],
         stateIndex: 0,
+        ...nodeData,
       },
-      position: {
-        x: position.x,
-        y: position.y,
-      },
+      position: { x: position.x, y: position.y },
     };
 
     // TODO can avoid sort here by adding at front of array
@@ -408,6 +419,53 @@ const useStore = create<RFState>((set, get) => ({
 
     set({
       edges: [...get().edges, newEdge],
+    });
+
+    return newNode;
+  },
+  addIntermediateNode: (childNode: InternalNode) => {
+    let childBeliefNode = get().nodes.find((n) => n.id === childNode.id);
+
+    // Set connecting user of child node to be the same as the child node's user
+    childNode.data = {
+      ...childNode.data,
+      connectingUser: childBeliefNode?.data.user,
+    };
+
+    const intermediatePosition = {
+      x: childNode.position.x / 2,
+      y: childNode.position.y / 2,
+    };
+
+    // Create new intermediate node as a parent of the child node
+    const intermediateNode = get().addParentNode(
+      childNode,
+      intermediatePosition,
+      childBeliefNode?.parentId
+    );
+
+    // Remove edge from old parent to child node
+    set({
+      edges: get().edges.filter(
+        (edge) =>
+          !(edge.target == childNode.id && edge.source == childNode.parentId)
+      ),
+    });
+
+    // Add edge from new intermediate node to parent node
+    console.log(
+      `source-${childBeliefNode?.parentId}-${intermediateNode.data.user}`
+    );
+    const intermediateToParentEdge: BeliefEdge = {
+      id: nanoid(),
+      type: "beliefEdge",
+      target: intermediateNode.id,
+      source: childBeliefNode?.parentId!,
+      sourceHandle: `source-${childBeliefNode?.parentId}-${intermediateNode.data.user}`,
+    };
+
+    set({
+      edges: [...get().edges, intermediateToParentEdge],
     });
   },
   addEdge: (
