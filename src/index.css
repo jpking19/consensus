@@ -187,6 +187,7 @@ body,
 
 .react-flow .react-flow__edges {
   position: absolute;
+  z-index: -2;
 }
 
 .react-flow .react-flow__edges svg {
