@@ -51,6 +51,7 @@ export type RFState = {
     nodeData?: Partial<NodeData>
   ) => InternalNode;
   addIntermediateNode: (childNode: InternalNode) => void;
+  addCopiedNodeForDisagreement: (childNode: InternalNode) => void;
   addEdge: (
     childNode: InternalNode,
     parentNode: InternalNode,
@@ -326,6 +327,18 @@ const useStore = create<RFState>((set, get) => ({
     // Get the user from the child node (this is the user that asserting new belief)
     const user = (childNode.data as BeliefNode["data"]).connectingUser;
 
+    let supportsParent = true;
+    if (parentId) {
+      const parentNode = get().nodes.find((n) => n.id === parentId);
+      if (parentNode) {
+        if (user == "left" && !parentNode.data.leftAcceptance) {
+          supportsParent = false;
+        } else if (user == "right" && !parentNode.data.rightAcceptance) {
+          supportsParent = false;
+        }
+      }
+    }
+
     // Create new parent node based on the child node's position
     const newNode: BeliefNode = {
       id: nanoid(),
@@ -335,8 +348,8 @@ const useStore = create<RFState>((set, get) => ({
         label: "",
         placeholderLabel: "What do you believe?",
         user: user === "left" || user === "right" ? user : "both", // Indicates which user this belief belongs to
-        supportsParent: true, // Initially has no parent
-        alignsWithParent: true, // Initially has no parent
+        supportsParent: supportsParent,
+        alignsWithParent: true, // Initially aligns with parent belief's acceptance state
         // User who creates belief will always accept it until manually changed
         leftAcceptance: user === "left" ? true : false,
         rightAcceptance: user === "right" ? true : false,
@@ -425,6 +438,7 @@ const useStore = create<RFState>((set, get) => ({
   },
   addIntermediateNode: (childNode: InternalNode) => {
     let childBeliefNode = get().nodes.find((n) => n.id === childNode.id);
+    if (!childBeliefNode) return;
 
     // Set connecting user of child node to be the same as the child node's user
     childNode.data = {
@@ -467,6 +481,47 @@ const useStore = create<RFState>((set, get) => ({
     set({
       edges: [...get().edges, intermediateToParentEdge],
     });
+  },
+  addCopiedNodeForDisagreement: (childNode: InternalNode) => {
+    let childBeliefNode = get().nodes.find((n) => n.id === childNode.id);
+    let parentBeliefNode = get().nodes.find((n) => n.id === childNode.parentId);
+    if (!childBeliefNode || !parentBeliefNode) return;
+
+    // Duplicate this node, with negative x position, for the opposite user
+    const oppositeUser =
+      childBeliefNode.data.user === "left" ? "right" : "left";
+    const copiedNode: BeliefNode = {
+      ...childBeliefNode,
+      id: nanoid(),
+      position: {
+        x: -childNode.position.x + parentBeliefNode.measured?.width!,
+        y: childNode.position.y,
+      },
+      data: {
+        ...childBeliefNode.data,
+        // The copied node is now claimed by the opposite user
+        user: oppositeUser,
+        alignsWithParent: true,
+        supportsParent: true,
+      },
+    };
+
+    // Create edge from parent to copied node
+    const newEdge: BeliefEdge = {
+      id: nanoid(),
+      type: "beliefEdge",
+      target: copiedNode.id,
+      source: childBeliefNode.parentId!,
+      sourceHandle: `source-${childBeliefNode.parentId}-${oppositeUser}`,
+    };
+
+    set({
+      nodes: [...get().nodes, copiedNode],
+      edges: [...get().edges, newEdge],
+    });
+
+    // Add intermediate node between parent and copied node
+    get().addIntermediateNode(copiedNode as InternalNode);
   },
   addEdge: (
     childNode: InternalNode,

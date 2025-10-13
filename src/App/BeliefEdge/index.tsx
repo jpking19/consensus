@@ -100,24 +100,47 @@ function BeliefEdge(props: EdgeProps<BeliefEdge>) {
 
   return (
     <>
-      <ButtonEdge
-        {...props}
-        className={`react-flow__edge selectable`}
-        style={edgeStyle}
-        // path={edgePath}
-      >
+      <ButtonEdge {...props} style={edgeStyle}>
         <Button
           onClick={() =>
             useStoreOriginal.getState().addIntermediateNode(childNode)
           }
+          className="monospace"
           size="sm"
           variant="default"
-          style={{ marginRight: "8px" }}
+          style={{
+            padding: "0 3px",
+            borderRadius: "3px",
+            fontSize: "11px",
+            background: ColorScheme.consensusNone,
+            border: `1px solid ${ColorScheme.textDefault}`,
+            color: ColorScheme.textDefault,
+            cursor: "pointer",
+          }}
         >
-          {/* <MousePointerClick size={16} /> */}+
+          {`+`}
         </Button>
-        <Button size="sm" variant="default">
-          {/* <MousePointerClick size={16} /> */}-
+        <Button
+          onClick={() =>
+            useStoreOriginal.getState().addCopiedNodeForDisagreement(childNode)
+          }
+          className="monospace"
+          size="sm"
+          variant="default"
+          style={{
+            paddingTop: "0px",
+            paddingBottom: "0px",
+            paddingLeft: "4px",
+            paddingRight: "4px",
+            borderRadius: "3px",
+            fontSize: "11px",
+            background: ColorScheme.consensusDisagree,
+            border: `1px solid ${ColorScheme.textDefault}`,
+            color: ColorScheme.textDefault,
+            cursor: "pointer",
+          }}
+        >
+          {`-`}
         </Button>
       </ButtonEdge>
     </>

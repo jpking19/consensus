@@ -6,6 +6,10 @@ body {
   margin: 0;
 }
 
+.monospace {
+  font-family: "Menlo", "Lucida Console", "Monaco", "Consolas", monospace;
+}
+
 html,
 body,
 #root {
