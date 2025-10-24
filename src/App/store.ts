@@ -1,22 +1,17 @@
 import {
-  type Node,
-  type Edge,
   type EdgeChange,
   type NodeChange,
   type OnNodesChange,
   type OnEdgesChange,
   applyNodeChanges,
   applyEdgeChanges,
-  getNodesBounds,
   type XYPosition,
   type InternalNode,
-  useInternalNode,
 } from "@xyflow/react";
 import { create } from "zustand";
 import { nanoid } from "nanoid/non-secure";
 
 import type { BeliefNode, BeliefEdge, NodeData } from "./types";
-import BeliefNode from "./BeliefNode";
 
 export type RFState = {
   nodes: BeliefNode[];
@@ -49,7 +44,7 @@ export type RFState = {
     position: XYPosition,
     parentId?: string,
     nodeData?: Partial<NodeData>
-  ) => InternalNode;
+  ) => BeliefNode | undefined;
   addIntermediateNode: (childNode: InternalNode) => void;
   addCopiedNodeForDisagreement: (childNode: InternalNode) => void;
   addEdge: (
@@ -322,10 +317,16 @@ const useStore = create<RFState>((set, get) => ({
     childNode: InternalNode,
     position: XYPosition,
     parentId?: string,
-    nodeData: Partial<NodeData> = {}
+    nodeData?: Partial<NodeData>
   ) => {
     // Get the user from the child node (this is the user that asserting new belief)
     const user = (childNode.data as BeliefNode["data"]).connectingUser;
+
+    if (!user) {
+      // If there's no user, we can't create a parent node
+      console.error("addParentNode: Missing user in child node data");
+      return;
+    }
 
     let supportsParent = true;
     if (parentId) {
@@ -337,6 +338,10 @@ const useStore = create<RFState>((set, get) => ({
           supportsParent = false;
         }
       }
+    }
+
+    if (nodeData == undefined) {
+      nodeData = {};
     }
 
     // Create new parent node based on the child node's position
@@ -379,7 +384,7 @@ const useStore = create<RFState>((set, get) => ({
               // But listen, it works and you can't access the new parent node's internals here
               x:
                 node.position.x -
-                (newNode.position.x - (node.measured?.width / 2 || 0) - 11.75),
+                (newNode.position.x - (node.measured?.width! / 2 || 0) - 11.75),
               y: node.position.y - newNode.position.y,
             },
             data: {
@@ -458,6 +463,11 @@ const useStore = create<RFState>((set, get) => ({
       childBeliefNode?.parentId
     );
 
+    if (!intermediateNode) {
+      console.error("addIntermediateNode: Failed to create intermediate node");
+      return;
+    }
+
     // Remove edge from old parent to child node
     set({
       edges: get().edges.filter(
@@ -467,9 +477,6 @@ const useStore = create<RFState>((set, get) => ({
     });
 
     // Add edge from new intermediate node to parent node
-    console.log(
-      `source-${childBeliefNode?.parentId}-${intermediateNode.data.user}`
-    );
     const intermediateToParentEdge: BeliefEdge = {
       id: nanoid(),
       type: "beliefEdge",
@@ -521,7 +528,8 @@ const useStore = create<RFState>((set, get) => ({
     });
 
     // Add intermediate node between parent and copied node
-    get().addIntermediateNode(copiedNode as InternalNode);
+    // Cannot directly cast to InternalNode, but we know it is one
+    get().addIntermediateNode(copiedNode as any);
   },
   addEdge: (
     childNode: InternalNode,
@@ -656,13 +664,17 @@ const useStore = create<RFState>((set, get) => ({
         .map((node) => {
           // If the node being deleted is a parent, we need to remove its parentId from its children
           if (node.parentId && nodeIdsToDelete.has(node.parentId)) {
-            console.log("Keeping child node:", node.id);
+            let parentNodePosition = parentNodePositions.get(node.id);
+            if (!parentNodePosition) {
+              console.log("No parent node position found for:", node.id);
+              parentNodePosition = { x: 0, y: 0 };
+            }
             return {
               ...node,
               // Reset the position of the child node from being relative to the parent's position
               position: {
-                x: node.position.x + parentNodePositions.get(node.parentId)?.x,
-                y: node.position.y + parentNodePositions.get(node.parentId)?.y,
+                x: node.position.x + parentNodePosition.x,
+                y: node.position.y + parentNodePosition.y,
               },
               parentId: undefined,
             };
@@ -684,19 +696,23 @@ const useStore = create<RFState>((set, get) => ({
       // If the edge is a child of a node being deleted, we need to remove the lineage
       nodesToRemoveLineage.add(edge.target);
     });
-    console.log("Nodes to remove lineage:", nodesToRemoveLineage);
+
     const edgeIdsToDelete = new Set(edgesToDelete.map((e) => e.id));
     set({
       // Set nodes with deleted edges to not have parentId any longer
       nodes: get().nodes.map((node) => {
         if (nodesToRemoveLineage.has(node.id)) {
+          let parentNodePosition = parentNodePositions.get(node.id);
+          if (!parentNodePosition) {
+            console.log("No parent node position found for:", node.id);
+            parentNodePosition = { x: 0, y: 0 };
+          }
           return {
             ...node,
             // Reset the position of the child node from being relative to the parent's position
-            // TODO these positions are not getting set right AT ALL
             position: {
-              x: node.position.x + parentNodePositions.get(node.id)?.x,
-              y: node.position.y + parentNodePositions.get(node.id)?.y,
+              x: node.position.x + parentNodePosition.x,
+              y: node.position.y + parentNodePosition.y,
             },
             parentId: undefined,
           };
@@ -791,7 +807,7 @@ const useStore = create<RFState>((set, get) => ({
     ) => {
       parent.data.collapsedChildren?.forEach((child) => {
         // 11.5 if the default offset for handle + padding, and 154 is half the default width of a node
-        let nextWidthToApply = 11.5 - (child.measured?.width - 154) / 2;
+        let nextWidthToApply = 11.5 - (child.measured?.width! - 154) / 2;
         if (!child.data.collapsed) {
           const restoredChildNode: BeliefNode = {
             ...child,
@@ -821,7 +837,7 @@ const useStore = create<RFState>((set, get) => ({
       if (adjustFirstChildren) {
         // The first child node needs to be restored with an adjustment for the parent width when switching
         // states, but with no padding for the handle
-        let nextWidthToApply = -(nodeToRestore.measured?.width - 154) / 2;
+        let nextWidthToApply = -(nodeToRestore.measured?.width! - 154) / 2;
         restoreChildren(nodeToRestore, nextWidthToApply, 0);
       } else {
         // The first child node needs to be restored at its actual position (no adjustment for parent width)

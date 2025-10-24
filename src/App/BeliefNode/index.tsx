@@ -1,5 +1,5 @@
 import { useLayoutEffect, useEffect, useRef, useState } from "react";
-import { Handle, Position, NodeToolbar } from "@xyflow/react";
+import { Position } from "@xyflow/react";
 import { NodeAppendix } from "@/components/node-appendix";
 import type { NodeProps } from "@xyflow/react";
 
@@ -10,9 +10,9 @@ import { SupportHandle } from "../SupportHandle";
 import { ColorScheme } from "../colors";
 
 import TextareaAutosize from "react-textarea-autosize";
-import BeliefEdge from "../BeliefEdge";
 
-function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
+export default function BeliefNode(props: NodeProps<BeliefNode>) {
+  const { id, data, parentId } = props;
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const appendixRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -39,7 +39,9 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
   };
 
   const handleNodeParentSupportChange = (e: React.MouseEvent) => {
-    updateNodeParentSupport(id, !data.supportsParent);
+    if ((e.target as Element).classList.contains("top-support-handle")) {
+      updateNodeParentSupport(id, !data.supportsParent);
+    }
   };
 
   useEffect(() => {
@@ -315,5 +317,3 @@ function BeliefNode({ id, parentId, data }: NodeProps<BeliefNode>) {
     </>
   );
 }
-
-export default BeliefNode;

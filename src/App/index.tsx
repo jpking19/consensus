@@ -19,6 +19,7 @@ import useStore, { type RFState } from "./store";
 import BeliefNode from "./BeliefNode";
 import BeliefEdge from "./BeliefEdge";
 import SupportConnection from "./SupportConnection";
+import type { BeliefNode as BeliefNodeType } from "./types";
 
 const nodeTypes = {
   belief: BeliefNode,
@@ -142,7 +143,14 @@ function Flow() {
         ) {
           // Check if user has pressed left or right arrow key
           const childNode = nodeLookup.get(connectingNodeId.current);
-          const user = (childNode.data as BeliefNode["data"]).connectingUser;
+
+          if (!childNode) {
+            console.error("onConnectEnd: Child node not found");
+            return;
+          }
+
+          const user = (childNode.data as BeliefNodeType["data"])
+            .connectingUser;
           if (connectingHandleId.current.includes("root")) {
             console.error("Cannot connect from root support handle");
             // TODO probably show some stronger visual feedback here
@@ -311,8 +319,8 @@ function Flow() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        onNodesChange={onNodesChange as any}
+        onEdgesChange={onEdgesChange as any}
         connectionLineComponent={SupportConnection}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}

@@ -1,29 +1,23 @@
-import { BaseEdge, Position, getBezierPath, useStore } from "@xyflow/react";
+import { Position, useStore } from "@xyflow/react";
 import type { EdgeProps } from "@xyflow/react";
 import "../../index.css"; // Import the CSS for styling
 import type { BeliefEdge } from "../types";
 import { useMemo } from "react";
 import { ColorScheme } from "../colors";
 import { Button } from "@/components/ui/button";
-import { MousePointerClick } from "lucide-react";
 import { ButtonEdge } from "@/components/button-edge";
 import { default as useStoreOriginal } from "../store";
 
-function BeliefEdge(props: EdgeProps<BeliefEdge>) {
+export default function BeliefEdge(props: EdgeProps<BeliefEdge>) {
   const childNode = useStore((state) => state.nodeLookup.get(props.target));
   const childNodeData = childNode?.data;
   const parentNodeData = useStore(
     (state) => state.nodeLookup.get(props.source)?.data
   );
 
-  const [edgePath] = getBezierPath({
-    sourceX: props.sourceX,
-    sourceY: props.sourceY,
-    targetX: props.targetX,
-    targetY: props.targetY,
-    sourcePosition: props.sourcePosition,
-    targetPosition: props.targetPosition,
-  });
+  if (!childNodeData || !parentNodeData) {
+    return null;
+  }
 
   // Use target node's data to get values for determing edge style
   const edgeStyle = useMemo(() => {
@@ -146,5 +140,3 @@ function BeliefEdge(props: EdgeProps<BeliefEdge>) {
     </>
   );
 }
-
-export default BeliefEdge;

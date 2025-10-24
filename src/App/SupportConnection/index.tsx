@@ -6,10 +6,30 @@ import {
 } from "@xyflow/react";
 import { ColorScheme } from "../colors";
 
-export default ({ fromX, fromY, toX, toY }) => {
-  const { fromHandle, fromNode } = useConnection();
+export default ({
+  fromX,
+  fromY,
+  toX,
+  toY,
+}: {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}) => {
+  const { fromNode, fromHandle } = useConnection();
+
+  if (!fromNode || !fromHandle) {
+    console.error("SupportConnection: Missing fromNode or fromHandle");
+    return null;
+  }
 
   const nodeData = useStore((state) => state.nodeLookup.get(fromNode.id)?.data);
+
+  if (!nodeData) {
+    console.error("SupportConnection: Missing nodeData");
+    return null;
+  }
 
   // TODO change circle to be fake node (temp border) (should be red if not connectingUser)
   // TODO should change sides based on connectingUser
@@ -21,7 +41,7 @@ export default ({ fromX, fromY, toX, toY }) => {
       sourceY: fromY,
       targetX: toX,
       targetY: toY,
-      sourcePosition: fromHandle?.position,
+      sourcePosition: fromHandle.position,
       targetPosition: nodeData.connectingUser
         ? nodeData.connectingUser === "left"
           ? Position.Left

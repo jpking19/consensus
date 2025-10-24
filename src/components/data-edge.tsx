@@ -1,12 +1,12 @@
 import {
   BaseEdge,
-  Edge,
+  type Edge,
   EdgeLabelRenderer,
-  EdgeProps,
+  type EdgeProps,
   getBezierPath,
   getSmoothStepPath,
   getStraightPath,
-  Node,
+  type Node,
   Position,
   useStore,
 } from "@xyflow/react";
