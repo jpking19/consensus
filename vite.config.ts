@@ -6,6 +6,7 @@ import fs from "vite-plugin-fs";
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/consensus",
   plugins: [react(), tailwindcss(), fs()],
   resolve: {
     alias: {
