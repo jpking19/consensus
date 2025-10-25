@@ -20,6 +20,7 @@ import BeliefNode from "./BeliefNode";
 import BeliefEdge from "./BeliefEdge";
 import SupportConnection from "./SupportConnection";
 import type { BeliefNode as BeliefNodeType } from "./types";
+import SplashScreen from "./SplashScreen";
 
 const nodeTypes = {
   belief: BeliefNode,
@@ -63,6 +64,12 @@ function Flow() {
     onDelete,
     updateNodeConnectingUser,
   } = useStore(useShallow(selector));
+
+  // Splash page state
+  const [showSplash, setShowSplash] = useState(() => {
+    return !localStorage.getItem("consensus-splash-dismissed");
+  });
+
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
   const connectingHandleId = useRef<string | null>(null);
@@ -287,6 +294,15 @@ function Flow() {
     onDelete();
   }, [deletePressed]);
 
+  const dismissSplash = () => {
+    localStorage.setItem("consensus-splash-dismissed", "true");
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onDismiss={dismissSplash} />;
+  }
+
   return (
     <>
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
@@ -314,6 +330,19 @@ function Flow() {
         </select>
         <button onClick={onRestore} style={{ padding: 4 }}>
           Restore Flow
+        </button>
+        <button
+          onClick={() => setShowSplash(true)}
+          style={{
+            padding: 4,
+            backgroundColor: "#2ecc71",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Help
         </button>
       </div>
       <ReactFlow
