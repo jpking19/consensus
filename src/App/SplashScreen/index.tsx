@@ -161,7 +161,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
       <div
         style={{
           width: "1000px",
-          height: "950px",
+          height: "1030px",
           backgroundColor: "#1e1e1e",
           borderRadius: "12px",
           border: "1px solid #444",
@@ -179,10 +179,9 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         >
           <h1
             style={{
-              fontSize: "32px",
+              fontSize: "48px",
               marginBottom: "10px",
-              fontFamily:
-                '"Menlo", "Lucida Console", "Monaco", "Consolas", monospace',
+              fontFamily: "Georgia, serif",
             }}
           >
             Welcome to Consensus
@@ -192,8 +191,8 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
               color: "#ccc",
               margin: 0,
               textAlign: "left",
-              fontFamily:
-                '"Menlo", "Lucida Console", "Monaco", "Consolas", monospace',
+              fontFamily: "Georgia, serif",
+              fontSize: "22px",
               lineHeight: "1.25",
             }}
           >
@@ -225,7 +224,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
             <br />
             <br />
             When both users signal acceptance on a Belief, it will be
-            highlighted as Consensus either in{" "}
+            highlighted as <b>Consensus</b> either in{" "}
             <span
               style={{
                 color: ColorScheme.consensus,
@@ -249,7 +248,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
             <br />
             <br />
             Before initiating the conversation, both users may optionally agree
-            to initial statements below (You can change them if you'd like):
+            to initial statements below:
           </p>
         </div>
 
@@ -318,8 +317,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
                   : "1px solid #666",
                 borderRadius: "6px",
                 cursor: "pointer",
-                fontFamily:
-                  '"Menlo", "Lucida Console", "Monaco", "Consolas", monospace',
+                fontFamily: "Georgia, serif",
                 transition:
                   "background-color 0.2s, color 0.2s, border-color 0.2s",
               }}
@@ -349,8 +347,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
                   : `1px solid ${ColorScheme.consensusDisagree}`,
                 borderRadius: "6px",
                 cursor: "pointer",
-                fontFamily:
-                  '"Menlo", "Lucida Console", "Monaco", "Consolas", monospace',
+                fontFamily: "Georgia, serif",
                 transition:
                   "background-color 0.2s, color 0.2s, border-color 0.2s",
               }}
@@ -380,8 +377,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
                   : "1px solid #666",
                 borderRadius: "6px",
                 cursor: "pointer",
-                fontFamily:
-                  '"Menlo", "Lucida Console", "Monaco", "Consolas", monospace',
+                fontFamily: "Georgia, serif",
                 transition:
                   "background-color 0.2s, color 0.2s, border-color 0.2s",
               }}
