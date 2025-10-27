@@ -79,6 +79,10 @@ export default function TopBar({
   return (
     <div
       style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
         display: "flex",
         gap: 8,
         justifyContent: "space-between",
@@ -87,6 +91,8 @@ export default function TopBar({
         paddingTop: 10,
         paddingBottom: 10,
         background: "#1e1e1e",
+        zIndex: 1000,
+        borderBottom: "1px solid #444",
       }}
     >
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

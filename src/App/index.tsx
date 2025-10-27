@@ -71,6 +71,9 @@ function Flow() {
     return !localStorage.getItem("consensus-splash-dismissed");
   });
 
+  // Debug tools state
+  const [showDebugTools, setShowDebugTools] = useState(false);
+
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
   const connectingHandleId = useRef<string | null>(null);
@@ -222,6 +225,9 @@ function Flow() {
       updateNodeConnectingUser(connectingNodeId.current, null);
       connectingNodeId.current = null;
       connectingHandleId.current = null;
+    } else if (event.ctrlKey && event.key === "m") {
+      event.preventDefault();
+      setShowDebugTools((prev) => !prev);
     }
   }, []);
 
@@ -262,7 +268,7 @@ function Flow() {
   }
 
   return (
-    <>
+    <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <TopBar
         onShowSplash={() => setShowSplash(true)}
         rfInstance={rfInstance}
@@ -291,9 +297,9 @@ function Flow() {
         <Background />
         <Controls />
         <MiniMap />
-        <DevTools position="top-left" />
+        {showDebugTools && <DevTools position="top-left" />}
       </ReactFlow>
-    </>
+    </div>
   );
 }
 
