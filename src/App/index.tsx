@@ -21,6 +21,7 @@ import BeliefEdge from "./BeliefEdge";
 import SupportConnection from "./SupportConnection";
 import type { BeliefNode as BeliefNodeType } from "./types";
 import SplashScreen from "./SplashScreen";
+import TopBar from "./TopBar";
 
 const nodeTypes = {
   belief: BeliefNode,
@@ -76,17 +77,6 @@ function Flow() {
   const leftPressed = useKeyPress(["ArrowLeft", "a"]);
   const rightPressed = useKeyPress(["ArrowRight", "d"]);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
-  const [flowName, setFlowName] = useState("");
-  const [savedFlows, setSavedFlows] = useState<string[]>([]);
-  const [selectedFlow, setSelectedFlow] = useState("");
-
-  // Load saved flow names from localStorage on mount
-  useEffect(() => {
-    const keys = Object.keys(localStorage).filter((key) =>
-      key.startsWith("consensus-flow-")
-    );
-    setSavedFlows(keys.map((key) => key.replace("consensus-flow-", "")));
-  }, []);
 
   const onConnectStart: OnConnectStart = useCallback(
     (_, { nodeId, handleId }) => {
@@ -257,38 +247,6 @@ function Flow() {
     [screenToFlowPosition, leftPressed, rightPressed]
   );
 
-  // Save flow with user-provided name
-  const onSave = useCallback(() => {
-    if (rfInstance && flowName) {
-      const flow = rfInstance.toObject();
-      localStorage.setItem(`consensus-flow-${flowName}`, JSON.stringify(flow));
-      setSavedFlows((prev) =>
-        prev.includes(flowName) ? prev : [...prev, flowName]
-      );
-      alert(`Flow saved as '${flowName}'`);
-    } else {
-      alert("Please enter a name for your flow before saving.");
-    }
-  }, [rfInstance, flowName]);
-
-  // Restore flow from selected name
-  const onRestore = useCallback(() => {
-    if (selectedFlow) {
-      const flow = JSON.parse(
-        localStorage.getItem(`consensus-flow-${selectedFlow}`) || "null"
-      );
-      if (flow) {
-        setNodes(flow.nodes || []);
-        setEdges(flow.edges || []);
-        // TODO restore viewport if needed
-      } else {
-        alert("No flow found for selected name.");
-      }
-    } else {
-      alert("Please select a flow to restore.");
-    }
-  }, [selectedFlow, setNodes, setEdges]);
-
   const deletePressed = useKeyPress(["Delete", "Backspace"]);
   useEffect(() => {
     onDelete();
@@ -305,46 +263,12 @@ function Flow() {
 
   return (
     <>
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-        <input
-          type="text"
-          value={flowName}
-          onChange={(e) => setFlowName(e.target.value)}
-          placeholder="Enter flow name"
-          style={{ padding: 4 }}
-        />
-        <button onClick={onSave} style={{ padding: 4 }}>
-          Save Flow
-        </button>
-        <select
-          value={selectedFlow}
-          onChange={(e) => setSelectedFlow(e.target.value)}
-          style={{ padding: 4 }}
-        >
-          <option value="">Select saved flow</option>
-          {savedFlows.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-        <button onClick={onRestore} style={{ padding: 4 }}>
-          Restore Flow
-        </button>
-        <button
-          onClick={() => setShowSplash(true)}
-          style={{
-            padding: 4,
-            backgroundColor: "#2ecc71",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Help
-        </button>
-      </div>
+      <TopBar
+        onShowSplash={() => setShowSplash(true)}
+        rfInstance={rfInstance}
+        setNodes={setNodes}
+        setEdges={setEdges}
+      />
       <ReactFlow
         nodes={nodes}
         edges={edges}
