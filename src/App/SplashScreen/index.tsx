@@ -33,7 +33,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
     {
       id: "splash-root-1",
       type: "belief",
-      position: { x: 200, y: 140 },
+      position: { x: 200, y: 200 },
       data: {
         label:
           "I intend to treat my conversation partner with respect and empathy.",
@@ -50,7 +50,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
     {
       id: "splash-root-2",
       type: "belief",
-      position: { x: 200, y: 250 },
+      position: { x: 200, y: 280 },
       data: {
         label:
           "The purpose of this conversation is not to establish my perspective as absolute truth.",
@@ -67,7 +67,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
     {
       id: "splash-root-3",
       type: "belief",
-      position: { x: 200, y: 350 },
+      position: { x: 200, y: 360 },
       data: {
         label:
           "The purpose of this conversation is to both reveal the foundational beliefs we share,    and to identify precisely where our high-level beliefs begin to diverge.",
